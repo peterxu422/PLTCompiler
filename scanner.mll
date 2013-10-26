@@ -10,9 +10,11 @@ rule token = parse
 | ','       { COMMA }           | '"'       { QUOTE }
 | '+'       { PLUS }            | '-'       { MINUS }
 | '*'       { TIMES }           | '/'       { DIVIDE }
+| '%'	    { PERCENT }			| '!'       { NOT }
 | '='       { ASSIGN }          | '^'       { TIE }
-| '!'       { NOT }             | "=="      { EQ }
-| "!="      { NEQ }             | '<'       { LT }
+| "||"	   { OR }				| "&&"	   { AND }
+| "=="      { EQ }				| "!="      { NEQ } 
+| "//"		{ COMMENT }			| '<'       { LT }
 | "<="      { LEQ }             | '>'       { GT }
 | ">="          { GEQ }             | "if"      { IF }      (* keywords *)
 | "else"        { ELSE }            | "for"     { FOR }
@@ -21,8 +23,9 @@ rule token = parse
 | "true"        { TRUE }            | "false"   { FALSE }
 | "function"    { FUNC }            | "pitch"   { PITCH }           
 | "sound"       { SOUND }           | "void"    { VOID }
-| "main"        { MAIN }           
+| "main"        { MAIN }           	
 | eof           { EOF }
+| ['A' - 'G']['#' 'b']?['0' - '9']  as lxm { PLIT(lxm) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 
