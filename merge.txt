@@ -2,11 +2,11 @@ test file for merge conflict explanation
 
 
 void code (stuff){
-	asdf;
 	aasdf;
 }
 
-random code (){
+random code () {
 	asdf;
 	asdf;
+    eeeeee;
 }
