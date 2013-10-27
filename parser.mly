@@ -1,17 +1,19 @@
 %{ open Ast %}
 
-%token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK SEMI COMMA PLUS MINUS TIMES DIVIDE
-%token ASSIGN EQ NEQ LT LEQ GT GEQ IF ELSE FOR WHILE RETURN INT PITCH SOUND VOID EOF
+%token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK SEMI COMMA PLUS MINUS TIMES DIVIDE MOD
+%token ASSIGN EQ NEQ LT LEQ GT GEQ NOT AND OR
+%token IF ELSE FOR WHILE RETURN INT PITCH SOUND VOID EOF
+
 %token <int> LITERAL
 %token <string> ID
 
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
-%left EQ NEQ
-%left LT GT LEQ GEQ
+%left AND OR
+%left LT GT LEQ GEQ EQ NEQ
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
 
 %start program
 %type <Ast.program> program
@@ -25,7 +27,7 @@ program:
 
 /*
 vdecl_list:
-     nothing          { [] }
+               { [] }
     | vdecl_list vdecl    { $2 :: $1  }    
 */
 
@@ -34,7 +36,6 @@ fdecl:
                     { { rettype = $1;
                         fname = $2;
 						formals = $4;
-						/*locals = List.rev $7;*/
 						body = List.rev $7 } }
 
 formals_opt:
@@ -75,7 +76,7 @@ vdecl:
             { { vartype = $1;
                 varname = $2 } }
 
-actuals_opt:
+actuals_opt: 
     /* nothing */   { [] }
     | actuals_list  {List.rev $1}
 
@@ -85,6 +86,21 @@ actuals_list:
 
 expr:
 	ID									{ Id($1) }
+	| LPAREN MINUS expr	RPAREN			{ Neg($3) } 
+	| NOT LPAREN expr RPAREN			{ Not($3) }  
+	| expr PLUS expr					{ Binop($1, Plus, $3) }
+	| expr MINUS expr					{ Binop($1, Minu, $3) }
+	| expr TIMES expr					{ Binop($1, Mult, $3) }
+	| expr DIVIDE expr					{ Binop($1, Divi, $3) }
+	| expr MOD expr						{ Binop($1, Mod , $3) }
+	| expr LT expr						{ Binop($1, Lt  , $3) }
+	| expr GT expr						{ Binop($1, Gt  , $3) }
+	| expr LEQ expr						{ Binop($1, Leq , $3) }
+	| expr GEQ expr						{ Binop($1, Geq , $3) }
+	| expr EQ expr						{ Binop($1, Eq  , $3) }
+	| expr AND expr						{ Binop($1, And , $3) }
+	| expr OR expr						{ Binop($1, Or  , $3) }
+	| expr ASSIGN expr					{ Binop($1, Asn , $3) }
 	| LPAREN expr RPAREN				{ Expr($2) }
 	| ID LPAREN actuals_opt RPAREN		{ Call($1, $3) }
 	| ID LBRACK expr RBRACK				{ Array($1, $3) }
