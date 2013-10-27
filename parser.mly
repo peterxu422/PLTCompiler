@@ -1,6 +1,6 @@
 %{ open Ast %}
 
-%token LPAREN RPAREN LBRACE RBRACE SEMI COMMA PLUS MINUS TIMES DIVIDE
+%token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK SEMI COMMA PLUS MINUS TIMES DIVIDE
 %token ASSIGN EQ NEQ LT LEQ GT GEQ IF ELSE FOR WHILE RETURN INT PITCH SOUND VOID EOF
 %token <int> LITERAL
 %token <string> ID
@@ -23,22 +23,19 @@ program:
     | program vdecl { ($2 :: fst $1), snd $1 }
     | program fdecl { fst $1, ($2 :: snd $1) }
 
+/*
 vdecl_list:
-    /* nothing */         { [] }
-    | vdecl_list vdecl    { $2 :: $1  }
-    
-vdecl:
-    typeConst ID SEMI			
-            { { vartype = $1;
-                varname = $2 } } 
+     nothing          { [] }
+    | vdecl_list vdecl    { $2 :: $1  }    
+*/
 
 fdecl:
-	typeConst ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+	typeConst ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
                     { { rettype = $1;
                         fname = $2;
 						formals = $4;
-						locals = List.rev $7;
-						body = List.rev $8 } }
+						/*locals = List.rev $7;*/
+						body = List.rev $7 } }
 
 formals_opt:
     /* nothing */           { [] }
@@ -64,13 +61,19 @@ stmt_list:
 	| stmt_list stmt          { $2 :: $1 }
 
 stmt:
-    expr SEMI                       { Expr($1) } 
-    | RETURN expr SEMI              { Return($2) }
-    | LBRACE stmt_list RBRACE       { Block(List.rev $2) }
-    | IF LPAREN expr RPAREN stmt    { If($3, $5, Block([])) }
-    /*elseif*/
-    | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
-    | ID LPAREN actuals_opt RPAREN  { Call($1, $3) }
+    expr SEMI                                       { Expr($1) } 
+    | RETURN expr SEMI                              { Return($2) }
+    | LBRACE stmt_list RBRACE                       { Block(List.rev $2) }
+    | IF LPAREN expr RPAREN stmt %prec NOELSE       { If($3, $5, Block([])) }
+    | IF LPAREN expr RPAREN stmt ELSE stmt          { If($3, $5, $7) }
+    | WHILE LPAREN expr RPAREN stmt                 { While($3, $5) }
+    | ID LPAREN actuals_opt RPAREN                  { Call($1, $3) }
+    | vdecl                                         { }
+
+vdecl:
+    typeConst ID SEMI			
+            { { vartype = $1;
+                varname = $2 } }
 
 actuals_opt:
     /* nothing */   { [] }
@@ -85,4 +88,3 @@ expr:
 	| LPAREN expr RPAREN				{ Expr($2) }
 	| ID LPAREN actuals_opt RPAREN		{ Call($1, $3) }
 	| ID LBRACK expr RBRACK				{ Array($1, $3) }
->>>>>>> e823bd76cbb8bd0a8f8c15df637edeefd3b8a8fc
