@@ -61,4 +61,26 @@ typeConst:
 
 stmt_list:
     /* nothing */             { [] }
-    | ID                      { $1 }
+    | stmt_list stmt          { $2 :: $1 }
+
+stmt:
+    expr SEMI                       { Expr($1) } 
+    | RETURN expr SEMI              { Return($2) }
+    | LBRACE stmt_list RBRACE       { Block(List.rev $2) }
+    | IF LPAREN expr RPAREN stmt    { If($3, $5, Block([])) }
+    /*elseif*/
+    | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
+    | ID LPAREN actuals_opt RPAREN  { Call($1, $3) }
+
+actuals_opt:
+    /* nothing */   { [] }
+    | actuals_list  {List.rev $1}
+
+actuals_list:
+    expr                        { [$1] }
+    | actuals_list COMMA expr   { $3 :: $1 } 
+    
+expr:
+    ID                          { Id($1) }
+    
+
