@@ -1,0 +1,12 @@
+test file for merge conflict explanation
+
+
+void code (stuff){
+	aasdf;
+}
+
+random code () {
+	asdf;
+	asdf;
+    eeeeee;
+}
