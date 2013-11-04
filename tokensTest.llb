@@ -1,0 +1,9 @@
+function void testName(){
+	pitch asdf = C0;
+	!=
+	sound woop = [C0, A5]:1/2:100;
+	sound asdf2 = asdf:asdf:asdf;
+	sound asdf2 = [asdf]:asdf:asdf;
+	/* #$^%#$%#$%@#$%#$@% */
+	// @#$%@#$%#$%&#W$~!~
+}
