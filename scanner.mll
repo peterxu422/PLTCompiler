@@ -19,14 +19,14 @@ rule token = parse
 | ">="          { GEQ }             | "if"      { IF }      (* keywords *)
 | "else"        { ELSE }            | "for"     { FOR }
 | "while"       { WHILE }           | "return"  { RETURN }
-| "int"         { INT }             | "double"  { DBL }
-| "true"        { TRUE }            | "false"   { FALSE }
+| "int"         { INT }             (* | "double"  { DBL } *)
+(*| "true"        { TRUE }            | "false"   { FALSE } *)
 | "function"    { FUNC }            | "pitch"   { PITCH }           
 | "sound"       { SOUND }           | "void"    { VOID }
 | "main"        { MAIN }           	
 | eof           { EOF }
-| ['A' - 'G']['#' 'b']?['0' - '9']  as lxm { PLITERAL(lxm) }
-| ['0'-'9']+ as lxm { INTLITERAL(int_of_string lxm) }
+(* | ['A' - 'G']['#' 'b']?['0' - '9']  as lxm { PLITERAL(lxm) } *)
+| ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 
 and comment = parse
