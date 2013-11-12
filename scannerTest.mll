@@ -3,11 +3,12 @@
 	COLON | QUOTE | MINUS | DIVIDE | NOT | TIE | AND | NEQ | LT | 
 	GT | IF | FOR | RETURN | DBL | FALSE | PITCH | VOID | OR | EQ |
 	 COMMENT | LEQ | GEQ | ELSE | WHILE | INT | TRUE | FUNC | SOUND |
-	 MAIN | EOF | SLIT of string  | PLIT of string  | LITERAL of int | ID of string 
+	 MAIN | EOF | S_LIT of string  | P_LIT of string  | INT_LIT of int | ID of string | DBL_LIT of float
 } 
 
 let pitch = (['A' - 'G']('#' | 'b')?['0' - '9'] | ['C' - 'G']('#' |'b')?"10")
 let int_lit = ['0'-'9']+
+let dbl_lit = ['0'-'9']+['.']['0' - '9']+
 let id = ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*
 let int_over_int = int_lit['/']int_lit
 let comma_pitch = pitch(','| ", ")
@@ -44,9 +45,10 @@ rule token = parse
 | "sound"       { SOUND }           | "void"    { VOID }
 | "main"        { MAIN }      	   	
 | eof           { EOF }
-| sound   as lxm { SLIT(lxm) }
-| pitch   as lxm { PLIT(lxm) }
-| int_lit as lxm { LITERAL(int_of_string lxm) }
+| sound   as lxm { S_LIT(lxm) }
+| pitch   as lxm { P_LIT(lxm) }
+| int_lit as lxm { INT_LIT(int_of_string lxm) }
+| dbl_lit as lxm { DBL_LIT(float_of_string lxm)}
 | id      as lxm { ID(lxm) }
 
 and comment = parse
@@ -106,13 +108,16 @@ let tester =
 		| COMMA -> next("COMMA" :: l)
 		| LBRACK -> next("LBRACK" :: l)
 		| ID(lit) -> next("ID" :: l)
-		| LITERAL(lit) -> next("LITERAL" :: l)
-		| PLIT(lit) -> next("PLIT" :: l)
-		| SLIT(lit) -> next("SLIT" :: l)
+		| INT_LIT(lit) -> next("INT_LIT" :: l)
+		| DBL_LIT(lit) -> next("DBL_LIT" :: l)
+		| P_LIT(lit) -> next("P_LIT" :: l)
+		| S_LIT(lit) -> next("S_LIT" :: l)
 	in next []
 in
 
-let out_list = ["RBRACE"; "SEMI"; "SLIT"; "ASSIGN"; "ID"; "SOUND"; "SEMI"; "SLIT"; "ASSIGN"; "ID"; "SOUND"; "SEMI"; "SLIT"; "ASSIGN"; "ID"; "SOUND"; "NEQ"; "SEMI"; "PLIT"; "ASSIGN"; "ID"; "PITCH"; "LBRACE"; "RPAREN"; "LPAREN"; "ID"; "VOID"; "FUNC"] in
+let out_list = ["RBRACE"; "SEMI"; "DBL_LIT"; "ASSIGN"; "ID"; "DBL"; "SEMI"; "S_LIT"; "ASSIGN"; "ID"; "SOUND"; "SEMI"; "S_LIT"; "ASSIGN"; "ID"; "SOUND"; "SEMI"; "S_LIT"; "ASSIGN"; "ID"; "SOUND"; "NEQ"; "SEMI"; "P_LIT"; "ASSIGN"; "ID"; "PITCH"; "LBRACE"; "RPAREN"; "LPAREN"; "ID"; "VOID"; "FUNC"] in
+
+
 
 let rec eq_list out test = match out, test with
 	[], [] -> true

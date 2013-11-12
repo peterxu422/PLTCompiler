@@ -4,6 +4,7 @@ function void testName(){
 	sound woop = [C0, A5]:1/2:100;
 	sound asdf2 = asdf:asdf:asdf;
 	sound asdf2 = [asdf]:asdf:asdf; //these could be variables and have not been evaluated yet
+	double asdf = 5.00;
 	/* #$^%#$%#$%@#$%#$@% */
 	// @#$%@#$%#$%&#W$~!~
 }
