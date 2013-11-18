@@ -1,9 +1,10 @@
 %{ open Ast %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
+%token INT DOUBLE PITCH SOUND VOID EOF
+
 %token <int> INT_LIT
 %token <string> ID
-%token EOF
 
 %start program
 %type <Ast.program> program
@@ -27,7 +28,14 @@ formals_opt:
 formal_list:
 	  ID					{ [$1] }
 	| formal_list COMMA ID	{$3 :: $1}
-		
+
+vdecl_list:
+	  /* nothing */		{ [] }
+	| vdecl_list vdecl  { $2 :: $1}
+	
+vdecl:
+	
+	
 stmt_list:
 	/* nothing */ { [] }
 	| stmt_list stmt { $2 :: $1 }
