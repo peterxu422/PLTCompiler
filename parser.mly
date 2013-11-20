@@ -5,14 +5,17 @@
 
 %token <int> INT_LIT
 %token <string> ID
+%token <string> DATATYPE
 
-%start program
+
 %type <Ast.program> program
+%start program
 
 %%
 
 program:
 	  /*nothing*/		{[], []}
+    | program vdecl { ($2 :: fst $1), snd $1 }
 	| program fdecl		{ fst $1, ($2 :: snd $1) }
 
 fdecl:
@@ -29,12 +32,12 @@ formal_list:
 	  ID					{ [$1] }
 	| formal_list COMMA ID	{$3 :: $1}
 
-vdecl_list:
-	  /* nothing */		{ [] }
-	| vdecl_list vdecl  { $2 :: $1}
+/* vdecl_list:   */
+      /* nothing */	   /*  { [] } */ 
+	/* | vdecl_list vdecl  { $2 :: $1}  */ 
 	
-vdecl:
-	
+vdecl: 
+    DATATYPE ID SEMI { {varname = $2; vartype = $1} }
 	
 stmt_list:
 	/* nothing */ { [] }

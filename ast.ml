@@ -16,7 +16,12 @@ type func_decl = {
 	body : stmt list;
 }
 
-type program = string list * func_decl list
+type var_decl = {
+	varname : string;
+	vartype : string;
+}
+
+type program = var_decl list * func_decl list
 
 let rec string_of_expr = function
 	  Int(i) -> string_of_int i
@@ -27,9 +32,9 @@ let rec string_of_expr = function
 let rec string_of_stmt = function
 	Block(stmts) ->
 		"{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
-	| Expr(expr) -> string_of_expr expr ^ ";\n"
+	| Expr(expr) ->  string_of_expr expr ^ ";\n"
 
-let string_of_vdecl id = "var " ^ id ^ ";\n"	
+let string_of_vdecl vdecl = vdecl.vartype ^ " " ^ vdecl.varname ^ ";\n"	
 
 let string_of_fdecl fdecl =
 	fdecl.fname ^ "(" ^ String.concat ", " fdecl.formals ^ ")\n{\n" ^
