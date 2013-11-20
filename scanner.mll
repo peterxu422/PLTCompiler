@@ -28,9 +28,11 @@ rule token = parse
 | ','		{ COMMA }
 | "int" { DATATYPE("int") }
 | "double" { DATATYPE("double") }
+| "boolean" { DATATYPE("boolean") }
 | id      as lxm { ID(lxm) }
-| dbl_lit as lxm { DOUBLE_LIT(float_of_string lxm)}
 | int_lit as lxm { INT_LIT(int_of_string lxm) }
+| dbl_lit as lxm { DOUBLE_LIT(float_of_string lxm)}
+| "true"|"false" as lxm {BOOLEAN_LIT(bool_of_string lxm)}
 | eof           { EOF }
 
 (*| '['       { LBRACK }          

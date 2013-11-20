@@ -1,9 +1,10 @@
 type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | And | Or
-type typeConst = Integer | Double | Void | Pitch | Sound
+type typeConst = Integer | Double | Void | Pitch | Sound | Boolean
 
 type expr =
 	  Int of int
 	| Double of float
+	| Boolean of bool
 	| Id of string
 	| Call of string * expr list
 
@@ -27,6 +28,7 @@ type program = var_decl list * func_decl list
 let rec string_of_expr = function
 	  Int(i) -> string_of_int i
 	| Double(d) -> string_of_float d
+	| Boolean(b) -> string_of_bool b
 	| Id(s) -> s
 	| Call(f, el) -> 
 		f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
