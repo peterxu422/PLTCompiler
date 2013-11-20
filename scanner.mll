@@ -4,7 +4,6 @@ let int_lit = ['0'-'9']+
 
 (*
 let pitch = (['A' - 'G']('#' | 'b')?['0' - '9'] | ['C' - 'G']('#' |'b')?"10")
-let dbl_lit = ['0'-'9']+['.']['0' - '9']+
 let int_over_int = int_lit['/']int_lit
 let comma_pitch = pitch(','| ", ")
 let comma_id = id(','| ", ")
@@ -15,6 +14,7 @@ let array_of_ids = ['[']ids[']']
 let sound = (array_of_pitches | id | array_of_ids)[':'](id | int_over_int)[':'](id | int_lit)
 *)
 let id = ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*
+let dbl_lit = ['0'-'9']+['.']['0' - '9']+
 
 rule token = parse
 [' ' '\t' '\r' '\n']    	{token lexbuf}
@@ -27,7 +27,9 @@ rule token = parse
 | ';'       { SEMI }
 | ','		{ COMMA }
 | "int" { DATATYPE("int") }
+| "double" { DATATYPE("double") }
 | id      as lxm { ID(lxm) }
+| dbl_lit as lxm { DOUBLE_LIT(float_of_string lxm)}
 | int_lit as lxm { INT_LIT(int_of_string lxm) }
 | eof           { EOF }
 

@@ -4,6 +4,7 @@
 %token INT DOUBLE PITCH SOUND VOID EOF
 
 %token <int> INT_LIT
+%token <float> DOUBLE_LIT
 %token <string> ID
 %token <string> DATATYPE
 
@@ -49,6 +50,7 @@ stmt:
 	
 expr:
 	  INT_LIT						{ Int($1) }
+    | DOUBLE_LIT                    { Double($1) }
 	| ID							{ Id($1) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
 	

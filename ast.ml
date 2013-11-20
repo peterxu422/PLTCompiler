@@ -3,6 +3,7 @@ type typeConst = Integer | Double | Void | Pitch | Sound
 
 type expr =
 	  Int of int
+	| Double of float
 	| Id of string
 	| Call of string * expr list
 
@@ -25,6 +26,7 @@ type program = var_decl list * func_decl list
 
 let rec string_of_expr = function
 	  Int(i) -> string_of_int i
+	| Double(d) -> string_of_float d
 	| Id(s) -> s
 	| Call(f, el) -> 
 		f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
