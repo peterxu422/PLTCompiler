@@ -3,10 +3,11 @@
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
 
+%token <string> ID
 %token <int> INT_LIT
 %token <float> DOUBLE_LIT
 %token <bool> BOOLEAN_LIT
-%token <string> ID
+%token <string> PITCH_LIT
 %token <string> DATATYPE
 
 
@@ -53,6 +54,7 @@ expr:
 	  INT_LIT						{ Int($1) }
     | DOUBLE_LIT                    { Double($1) }
     | BOOLEAN_LIT                   { Boolean($1) }
+    | PITCH_LIT                     { Pitch($1) }
 	| ID							{ Id($1) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
 	
