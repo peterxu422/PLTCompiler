@@ -6,7 +6,6 @@ let int_lit = ['0'-'9']+
 let int_over_int = int_lit['/']int_lit
 let comma_pitch = pitch(','| ", ")
 let comma_id = id(','| ", ")
-let pitches = pitch | comma_pitch*pitch
 let ids = id | comma_id*id
 let array_of_pitches = ['[']pitches[']']
 let array_of_ids = ['[']ids[']']
@@ -26,6 +25,8 @@ rule token = parse
 | '}'       { RBRACE }
 | ';'       { SEMI }
 | ','		{ COMMA }
+| '['       { LBRACK }          
+| ']'       { RBRACK }
 | "int" { DATATYPE("int") }
 | "double" { DATATYPE("double") }
 | "boolean" { DATATYPE("boolean") }
@@ -37,9 +38,7 @@ rule token = parse
 | "true"|"false" as lxm {BOOLEAN_LIT(bool_of_string lxm)}
 | eof           { EOF }
 
-(*| '['       { LBRACK }          
-| ']'       { RBRACK }
-| ':'       { COLON }
+(*| ':'       { COLON }
 | ','       { COMMA }           
 | '"'       { QUOTE }
 | '+'       { PLUS }            

@@ -1,6 +1,7 @@
 %{ open Ast %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
+%token LBRACK RBRACK
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
 
 %token <string> ID
@@ -57,6 +58,12 @@ expr:
     | PITCH_LIT                     { Pitch($1) }
 	| ID							{ Id($1) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
+    | LBRACK array RBRACK           { Array(List.rev $2) }
+    | LBRACK RBRACK                 { Array([]) }
+
+array: 
+     expr { [$1] }
+    | array COMMA expr { $3 :: $1 }
 	
 actuals_opt:
 	/*nothing*/ 	{ [] }

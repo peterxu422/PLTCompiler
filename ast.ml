@@ -7,6 +7,7 @@ type expr =
 	| Boolean of bool
 	| Pitch of string
 	| Id of string
+	| Array of expr list
 	| Call of string * expr list
 
 type stmt =
@@ -32,6 +33,8 @@ let rec string_of_expr = function
 	| Boolean(b) -> string_of_bool b
 	| Pitch(p) -> p
 	| Id(s) -> s
+	| Array(s) ->
+		"[" ^ String.concat ", " (List.map string_of_expr s) ^ "]"
 	| Call(f, el) -> 
 		f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 
