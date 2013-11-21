@@ -51,8 +51,8 @@ let run (vars, funcs) =
 		(* this should actually take in env eventually. I think
 		   that the fold left will accumulate (locals, globals),
 		   which will be returned by stuff above*)
-		print_endline ("calling " ^ fdecl.fname );
-		print_endline ("body:  " ^ string_of_fdecl fdecl);
+		(*print_endline ("calling " ^ fdecl.fname );*)
+		(*print_endline ("body:  " ^ string_of_fdecl fdecl);*)
     	List.fold_left exec () fdecl.body
 
 	in
@@ -61,4 +61,5 @@ let run (vars, funcs) =
 let _ = 
 	let lexbuf = Lexing.from_channel stdin in 
 	let program = Parser.program Scanner.token lexbuf in
-	run program
+	(*run program*)
+	Ast.string_of_program program

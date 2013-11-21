@@ -6,6 +6,7 @@ type expr =
 	| Double of float
 	| Boolean of bool
 	| Pitch of string
+	| Sound of string
 	| Id of string
 	| Array of expr list
 	| Call of string * expr list
@@ -36,6 +37,7 @@ let rec string_of_expr = function
 	| Double(d) -> string_of_float d
 	| Boolean(b) -> string_of_bool b
 	| Pitch(p) -> p
+	| Sound(s) -> s
 	| Id(s) -> s
 	| Array(s) ->
 		"[" ^ String.concat ", " (List.map string_of_expr s) ^ "]"

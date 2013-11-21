@@ -8,6 +8,7 @@
 %token <int> INT_LIT
 %token <float> DOUBLE_LIT
 %token <bool> BOOLEAN_LIT
+%token <string> SOUND_LIT
 %token <string> PITCH_LIT
 %token <string> DATATYPE
 %token ASSIGN
@@ -60,6 +61,7 @@ expr:
     | DOUBLE_LIT                    { Double($1) }
     | BOOLEAN_LIT                   { Boolean($1) }
     | PITCH_LIT                     { Pitch($1) }
+	| SOUND_LIT						{ Sound($1) }
 	| ID							{ Id($1) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
     | LBRACK array RBRACK           { Array(List.rev $2) }
