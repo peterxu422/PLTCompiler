@@ -5,4 +5,14 @@
 *.o
 *.cmx
 *.cmxs
+.DS_Store
+interpret
+printAst
 *.cmxa
+microc.ml
+parser.ml
+parser.mli
+printAst
+printast.ml
+printer
+scanner.ml
