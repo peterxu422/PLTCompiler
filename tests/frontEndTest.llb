@@ -3,7 +3,8 @@ double d;
 boolean b;
 pitch p;
 
-main(){
+void main(){
+int i;
 print(5);
 i = 5;
 true = true;

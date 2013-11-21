@@ -25,10 +25,12 @@ program:
 	| program fdecl		{ fst $1, ($2 :: snd $1) }
 
 fdecl:
-	ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
-	{ { fname = $1;
-		formals = $3;
-		body = List.rev $6 } }
+	DATATYPE ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+	{ { fname = $2;
+		rtype = $1;
+		formals = $4;
+		locals = List.rev $7;
+		body = List.rev $8 } }
 
 formals_opt:
 	/* nothing */		{ [] }
@@ -38,9 +40,9 @@ formal_list:
 	  ID					{ [$1] }
 	| formal_list COMMA ID	{$3 :: $1}
 
-/* vdecl_list:   */
-      /* nothing */	   /*  { [] } */ 
-	/* | vdecl_list vdecl  { $2 :: $1}  */ 
+ vdecl_list:   
+       			   	     { [] }  
+	 | vdecl_list vdecl  { $2 :: $1}   
 	
 vdecl: 
     DATATYPE ID SEMI { {varname = $2; vartype = $1} }
