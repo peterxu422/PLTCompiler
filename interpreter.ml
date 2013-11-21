@@ -56,6 +56,5 @@ let run (vars, funcs) =
 
 let _ = 
 	let lexbuf = Lexing.from_channel stdin in 
-	let fdecl = Parser.program Scanner.token lexbuf in
-	run fdecl
-
+	let program = Parser.program Scanner.token lexbuf in
+	run program
