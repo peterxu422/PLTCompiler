@@ -38,17 +38,21 @@ let run (vars, funcs) =
 				  try NameMap.find f func_decls
 				  with Not_found -> raise (Failure ("undefined function " ^ f))
 				in
+				let globals = call fdecl [] []
+				in
 		  	 0, env
 		in
 
 		(* executes statements, calls evals on expressions *)
 		let rec exec env = function
 			| Expr(e) -> let _ = eval env e in env
-		in 
+		in  
 
 		(* this should actually take in env eventually. I think
 		   that the fold left will accumulate (locals, globals),
 		   which will be returned by stuff above*)
+		print_endline ("calling " ^ fdecl.fname );
+		print_endline ("body:  " ^ string_of_fdecl fdecl);
     	List.fold_left exec () fdecl.body
 
 	in

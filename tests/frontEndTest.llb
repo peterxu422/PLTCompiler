@@ -4,13 +4,13 @@ boolean b;
 pitch p;
 
 void main(){
-int i;
-print(5);
-i = 5;
-true = true;
-hello = world;
-false;
-A#5;
-[1, 2, 3];
-print(4.5);
+	int i;
+	i = 5;
+	print(5);
+	true = true;
+	hello = world;
+	false;
+	A#5;
+	[1, 2, 3];
+	print(4.5);
 }
