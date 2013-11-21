@@ -3,7 +3,7 @@ double d;
 boolean b;
 pitch p;
 
-void main(){
+void main(int a, double b, pitch c){
 	int i;
 	i = 5;
 	print(5);

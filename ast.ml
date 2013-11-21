@@ -21,10 +21,15 @@ type var_decl = {
 	vartype : string;
 }
 
+type par_decl = {
+	paramname : string; (* Name of the variable *)
+	paramtype : string; (* Name of variable type *)
+}
+
 type func_decl = {
 	rtype : string;
 	fname : string;
-	formals : string list;
+	formals : par_decl list;
 	locals : var_decl list;
 	body : stmt list;
 }
@@ -53,9 +58,10 @@ let rec string_of_stmt = function
 	| Expr(expr) ->  string_of_expr expr ^ ";\n"
 
 let string_of_vdecl vdecl = vdecl.vartype ^ " " ^ vdecl.varname ^ ";\n"	
+let string_of_pdecl pdecl = pdecl.paramtype ^ " " ^ pdecl.paramname	
 
 let string_of_fdecl fdecl =
-	fdecl.rtype ^ " " ^ fdecl.fname ^ "(" ^ String.concat ", " fdecl.formals ^ ")\n{\n" ^
+	fdecl.rtype ^ " " ^ fdecl.fname ^ "(" ^ String.concat ", " (List.map string_of_pdecl fdecl.formals) ^ ")\n{\n" ^
 	String.concat "" (List.map string_of_vdecl fdecl.locals) ^
 	String.concat "" (List.map string_of_stmt fdecl.body) ^
 	"}\n"
