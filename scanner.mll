@@ -32,7 +32,7 @@ rule token = parse
 | "double"  { DATATYPE("double") }
 | "boolean" { DATATYPE("boolean") }
 | "pitch"   { DATATYPE("pitch") }
-| "void"   { DATATYPE("void") }
+| "void"    { DATATYPE("void") }
 | id             as lxm { ID(lxm) }
 | int_lit        as lxm { INT_LIT(int_of_string lxm) }
 | dbl_lit        as lxm { DOUBLE_LIT(float_of_string lxm)}

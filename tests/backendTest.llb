@@ -1,8 +1,8 @@
 void main(){
 	print(5);
-	bar();
+	bar(19);
 }
 
-void bar() {
-	print (19);
+void bar(int a) {
+	print(a);
 }
