@@ -37,8 +37,13 @@ formals_opt:
 	| formal_list		{ List.rev $1 }
 
 formal_list:
-	  ID					{ [$1] }
-	| formal_list COMMA ID	{$3 :: $1}
+	param_decl { [$1] }
+	| formal_list COMMA param_decl { $3 :: $1 }
+
+param_decl:
+	DATATYPE ID
+		{ {	paramname = $2;
+			paramtype = $1 } }
 
  vdecl_list:   
        			   	     { [] }  
