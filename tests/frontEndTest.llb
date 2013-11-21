@@ -1,11 +1,13 @@
-int i = 4;
+int i;
 double d;
 boolean b;
 pitch p;
 
 main(){
 print(5);
-true;
+i = 5;
+true = true;
+hello = world;
 false;
 A#5;
 [1, 2, 3];

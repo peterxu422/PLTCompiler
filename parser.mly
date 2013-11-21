@@ -10,7 +10,9 @@
 %token <bool> BOOLEAN_LIT
 %token <string> PITCH_LIT
 %token <string> DATATYPE
+%token ASSIGN
 
+%right ASSIGN
 
 %type <Ast.program> program
 %start program
@@ -60,6 +62,7 @@ expr:
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
     | LBRACK array RBRACK           { Array(List.rev $2) }
     | LBRACK RBRACK                 { Array([]) }
+    | expr ASSIGN expr 				{ Assign($1, $3) }
 
 array: 
      expr { [$1] }

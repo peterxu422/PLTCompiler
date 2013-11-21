@@ -9,6 +9,7 @@ type expr =
 	| Id of string
 	| Array of expr list
 	| Call of string * expr list
+	| Assign of expr * expr
 
 type stmt =
 	  Block of stmt list
@@ -37,6 +38,8 @@ let rec string_of_expr = function
 		"[" ^ String.concat ", " (List.map string_of_expr s) ^ "]"
 	| Call(f, el) -> 
 		f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+	| Assign(id, stuff) -> 
+		(string_of_expr id) ^ " = " ^ (string_of_expr stuff)
 
 
 let rec string_of_stmt = function
