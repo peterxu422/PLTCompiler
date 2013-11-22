@@ -1,8 +1,14 @@
-%{ open Ast %}
+%{ open Ast 
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token LBRACK RBRACK
+let parse_error s = (* Called by the parser function on error *)
+  print_endline s;
+  flush stdout
+
+%}
+
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
+%token RETURN IF ELSE
 
 %token <string> ID
 %token <int> INT_LIT
@@ -13,10 +19,12 @@
 %token <string> DATATYPE
 %token ASSIGN
 
+%nonassoc NOELSE
+%nonassoc ELSE
 %right ASSIGN
 
-%type <Ast.program> program
 %start program
+%type <Ast.program> program
 
 %%
 
@@ -59,7 +67,10 @@ stmt_list:
 	
 stmt:
 	  expr SEMI {Expr($1) }
+	| RETURN expr SEMI { Return($2) }
 	| LBRACE stmt_list RBRACE { Block(List.rev $2) }
+	| IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
+	| IF LPAREN expr RPAREN stmt ELSE stmt	  { If($3, $5, $7) }
 	
 expr:
 	  INT_LIT						{ Int($1) }

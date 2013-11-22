@@ -60,6 +60,7 @@ let run (vars, funcs) =
 
 let _ = 
 	let lexbuf = Lexing.from_channel stdin in 
+	(*let stmt = Parser.stmt Scanner.token lexbuf in*)
 	let program = Parser.program Scanner.token lexbuf in
 	(*run program*)
 		print_endline (Ast.string_of_program program)

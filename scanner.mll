@@ -1,7 +1,5 @@
 { open Parser }
 
-(*
-*)
 let pitch = (['A' - 'G']('#' | 'b')?['0' - '9'] | ['C' - 'G']('#' |'b')?"10")
 let int_lit = ['0'-'9']+
 let dbl_lit = ['0'-'9']+['.']['0' - '9']+
@@ -34,12 +32,15 @@ rule token = parse
 | "pitch"   { DATATYPE("pitch") }
 | "sound"   { DATATYPE("sound") } 
 | "void"    { DATATYPE("void") }
+| "true"|"false" as lxm { BOOLEAN_LIT(bool_of_string lxm)}
+| "return"  { RETURN }
+| "if"		{ IF }
+| "else"	{ ELSE }
 | id             as lxm { ID(lxm) }
 | int_lit        as lxm { INT_LIT(int_of_string lxm) }
 | dbl_lit        as lxm { DOUBLE_LIT(float_of_string lxm)}
 | pitch          as lxm { PITCH_LIT(lxm)}
 | sound   		 as lxm { SOUND_LIT(lxm) }
-| "true"|"false" as lxm {BOOLEAN_LIT(bool_of_string lxm)}
 | eof       { EOF }
 
 (*| ':'       { COLON }
@@ -60,11 +61,11 @@ rule token = parse
 | '>'       { GT }
 | "<="      { LEQ }             
 | ">="          { GEQ }             
-| "if"      { IF }  
-| "else"        { ELSE }            
+  
+            
 | "for"     { FOR }
 | "while"       { WHILE }           
-| "return"  { RETURN }
+
 | "function"    { FUNC }            
 | "main"        { MAIN }      	   	
 
