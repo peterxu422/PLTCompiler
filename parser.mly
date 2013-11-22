@@ -22,7 +22,7 @@
 
 program:
 	  /*nothing*/		{[], []}
-    | program vdecl { ($2 :: fst $1), snd $1 }
+    | program vdecl 	{ ($2 :: fst $1), snd $1 }
 	| program fdecl		{ fst $1, ($2 :: snd $1) }
 
 fdecl:
@@ -46,7 +46,7 @@ param_decl:
 		{ {	paramname = $2;
 			paramtype = $1 } }
 
- vdecl_list:   
+vdecl_list:   
        			   	     { [] }  
 	 | vdecl_list vdecl  { $2 :: $1}   
 	

@@ -65,22 +65,24 @@ rule token = parse
 | "for"     { FOR }
 | "while"       { WHILE }           
 | "return"  { RETURN }
+| "function"    { FUNC }            
+| "main"        { MAIN }      	   	
+
+
+//The following below are either unnecessary or redundant
 | "int"         { INT }             
 | "double"  { DBL }
-| "true"        { TRUE }            
-| "false"   { FALSE }
-| "function"    { FUNC }            
 | "pitch"   { PITCH }                     
 | "void"    { VOID }
-| "main"        { MAIN }      	   	
+| "true"        { TRUE }            
+| "false"   { FALSE }
+
 | pitch   as lxm { P_LIT(lxm) }
 | dbl_lit as lxm { DBL_LIT(float_of_string lxm)}
-
 | ['A' - 'G']['#' 'b']?['0' - '9']  as lxm { PLITERAL(lxm) }
 | ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
-*)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
-
+*)
 
 and comment = parse
 "*/"    { token lexbuf }
