@@ -2,7 +2,7 @@
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
 %token LBRACK RBRACK
-%token PLUS MINUS TIMES DIVIDE PERCENT NOT CARROT
+%token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG CARROT
 %token OR AND EQ NEQ LT GT LEQ GEQ
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF 
 
@@ -23,7 +23,7 @@
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left PERCENT
-%left NOT
+%left NOT NEG
 %left CARROT
 
 %type <Ast.program> program
@@ -88,7 +88,8 @@ expr:
 	| expr TIMES	expr							{ Binop($1, Mult, $3) }
 	| expr DIVIDE expr							{ Binop($1, Div, $3) }
 	| expr PERCENT expr							{ Binop($1, Mod, $3) }
-	| NOT expr											{ Neg($2) }
+	| NOT expr											{ Unop(Not, $2) }
+	| MINUS expr										{ Unop(Neg, $2) }
 	| expr CARROT										{ Tie($1) }
 	| expr OR expr									{ Binop($1, Or, $3) }
 	| expr AND expr									{ Binop($1, And, $3) }

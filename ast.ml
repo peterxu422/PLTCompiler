@@ -1,4 +1,5 @@
 type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | Neq | And | Or
+type unop = Neg | Not
 type typeConst = Integer | Double | Void | Pitch | Sound | Boolean
 
 type expr =
@@ -12,7 +13,7 @@ type expr =
 	| Call of string * expr list
 	| Assign of expr * expr
 	| Binop of expr * op * expr
-	| Neg of expr
+	| Unop of unop * expr
 	| Tie of expr
 
 type stmt =
@@ -70,7 +71,11 @@ let rec string_of_expr = function
 			| Leq		-> "<="
 			| Geq		-> ">="
 			) ^ " " ^ string_of_expr e2
-	| Neg(e) -> "!" ^ string_of_expr e
+	| Unop(o, e) ->
+		(match o with
+			Not			-> "!"
+		|	Neg			-> "-")
+		^ string_of_expr e
 	| Tie(e) -> (string_of_expr e) ^ "^"
 
 
