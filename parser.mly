@@ -8,6 +8,8 @@ let parse_error s = (* Called by the parser function on error *)
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
+%token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG CARROT
+%token OR AND EQ NEQ LT GT LEQ GEQ
 %token RETURN IF ELSE
 
 %token <string> ID
@@ -22,6 +24,15 @@ let parse_error s = (* Called by the parser function on error *)
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
+%left	OR
+%left AND
+%left EQ NEQ
+%left LT GT LEQ GEQ
+%left PLUS MINUS
+%left TIMES DIVIDE
+%left PERCENT
+%left NOT NEG
+%left CARROT
 
 %start program
 %type <Ast.program> program
@@ -73,16 +84,33 @@ stmt:
 	| IF LPAREN expr RPAREN stmt ELSE stmt	  { If($3, $5, $7) }
 	
 expr:
-	  INT_LIT						{ Int($1) }
-    | DOUBLE_LIT                    { Double($1) }
-    | BOOLEAN_LIT                   { Boolean($1) }
-    | PITCH_LIT                     { Pitch($1) }
-	| SOUND_LIT						{ Sound($1) }
-	| ID							{ Id($1) }
+	  INT_LIT												{ Int($1) }
+  | DOUBLE_LIT                    { Double($1) }
+  | BOOLEAN_LIT                   { Boolean($1) }
+  | PITCH_LIT                     { Pitch($1) }
+	| SOUND_LIT											{ Sound($1) }
+	| ID														{ Id($1) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
-    | LBRACK array RBRACK           { Array(List.rev $2) }
-    | LBRACK RBRACK                 { Array([]) }
-    | expr ASSIGN expr 				{ Assign($1, $3) }
+  | LBRACK array RBRACK           { Array(List.rev $2) }
+  | LBRACK RBRACK                 { Array([]) }
+  | expr ASSIGN expr 							{ Assign($1, $3) }
+  | expr PLUS expr								{ Binop($1, Add, $3) }
+	| expr MINUS	expr							{ Binop($1, Sub, $3) }
+	| expr TIMES	expr							{ Binop($1, Mult, $3) }
+	| expr DIVIDE expr							{ Binop($1, Div, $3) }
+	| expr PERCENT expr							{ Binop($1, Mod, $3) }
+	| NOT expr											{ Unop(Not, $2) }
+	| MINUS expr										{ Unop(Neg, $2) }
+	| expr CARROT										{ Tie($1) }
+	| expr OR expr									{ Binop($1, Or, $3) }
+	| expr AND expr									{ Binop($1, And, $3) }
+	| expr EQ expr									{ Binop($1, Eq, $3) }
+	| expr NEQ expr									{ Binop($1, Neq, $3) }
+	| expr LT expr									{ Binop($1, Lt, $3) }
+	| expr GT expr									{ Binop($1, Gt, $3) }
+	| expr LEQ expr									{ Binop($1, Leq, $3) }
+	| expr GEQ expr									{ Binop($1, Geq, $3) }
+
 
 array: 
      expr { [$1] }

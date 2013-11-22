@@ -22,10 +22,25 @@ rule token = parse
 | '{'       { LBRACE }          
 | '}'       { RBRACE }
 | ';'       { SEMI }
-| ','		{ COMMA }
+| ','				{ COMMA }
 | '['       { LBRACK }          
 | ']'       { RBRACK }
-| '=' 		{ ASSIGN }
+| '=' 			{ ASSIGN }
+| '+'       { PLUS }
+| '-'       { MINUS }
+| '*'       { TIMES }           
+| '/'       { DIVIDE }
+| '%'	    	{ PERCENT }	
+| '!'       { NOT }
+| '^'       { CARROT }
+| "||"	    { OR }
+| "&&"	    { AND }
+| "=="      { EQ }				
+| "!="      { NEQ } 
+| '<'       { LT }
+| '>'       { GT }
+| "<="      { LEQ }             
+| ">="      { GEQ }  
 | "int"     { DATATYPE("int") }
 | "double"  { DATATYPE("double") }
 | "boolean" { DATATYPE("boolean") }
@@ -62,7 +77,7 @@ rule token = parse
 | "<="      { LEQ }             
 | ">="          { GEQ }             
   
-            
+           
 | "for"     { FOR }
 | "while"       { WHILE }           
 
