@@ -1,4 +1,4 @@
-type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | And | Or
+type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | Neq | And | Or
 type typeConst = Integer | Double | Void | Pitch | Sound | Boolean
 
 type expr =
@@ -11,6 +11,9 @@ type expr =
 	| Array of expr list
 	| Call of string * expr list
 	| Assign of expr * expr
+	| Binop of expr * op * expr
+	| Neg of expr
+	| Tie of expr
 
 type stmt =
 	  Block of stmt list
@@ -50,6 +53,25 @@ let rec string_of_expr = function
 		f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 	| Assign(id, stuff) -> 
 		(string_of_expr id) ^ " = " ^ (string_of_expr stuff)
+	| Binop(e1, o, e2) ->
+		string_of_expr e1 ^ " " ^
+			(match o with
+				Add			-> "+"
+			|	Sub		-> "-"
+			| Mult	-> "*"
+			| Div		-> "/"
+			| Mod		-> "%"
+			| Or		-> "||"
+			| And		-> "&&"
+			| Eq		-> "=="
+			| Neq		-> "!="
+			| Lt		-> "<"
+			| Gt		-> ">"
+			| Leq		-> "<="
+			| Geq		-> ">="
+			) ^ " " ^ string_of_expr e2
+	| Neg(e) -> "!" ^ string_of_expr e
+	| Tie(e) -> (string_of_expr e) ^ "^"
 
 
 let rec string_of_stmt = function
