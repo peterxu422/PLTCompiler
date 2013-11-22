@@ -1,0 +1,57 @@
+void main() {
+	printInt(retIntLit());
+	printInt(retIntVar());
+	
+	printDbl(retDblLit());
+	printDbl(retDblVar());
+	
+	printPitch(retPitchLit());
+	printPitch(retPitchVar());
+	
+	printSound(retSoundLit());
+	printSound(retSoundVar());
+	return;
+}
+
+
+int retIntLit() {
+	return 1;
+}
+
+/*
+int retIntVar() {
+	int i;
+	i = 1;
+	return i;
+}
+
+double retDblLit() {
+	return 1.0;
+}
+
+double retDblVar() {
+	double d;
+	d=1.0;
+	return d;
+}
+
+pitch retPitchLit() {
+	return A5;
+}
+
+pitch retPitchVar() {
+	pitch p;
+	p = A5;
+	return p;
+}
+
+sound retSoundLit() {
+	return A5:1/4:100;
+}
+
+sound retSoundVar() {
+	sound s;
+	s = A5:1/4:100;
+	return s;
+}
+*/

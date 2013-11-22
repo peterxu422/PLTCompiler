@@ -46,7 +46,15 @@ void main(int a, double b, pitch c){
 	d=1.9999;
 	
 	//Testing boolean
-	b = false;
+	b = true;
 	
+	//Testing if Statement
 	
+	if(true) 
+	{
+		d = 0.5;
+	}
+	
+	//Testing return Statement
+	//return;
 }
