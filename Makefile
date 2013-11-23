@@ -1,12 +1,21 @@
-all: 
+OBJS = ast.cmo parser.cmo scanner.cmo interpreter.cmo
+
+all: interpret
+
+interpret: $(OBJS)
+	ocamlc -o interpret $(OBJS)
+
+scanner.ml: scanner.mll
 	ocamllex scanner.mll
+	
+parser.ml parser.mli: parser.mly
 	ocamlyacc parser.mly
-	ocamlc -c ast.ml
-	ocamlc -c parser.mli
-	ocamlc -c scanner.ml
-	ocamlc -c parser.ml
-	ocamlc -c interpreter.ml
-	ocamlc -o interpret ast.cmo parser.cmo scanner.cmo interpreter.cmo
+
+%.cmo: %.ml
+	ocamlc -c $<
+
+%.cmi: %.mli
+	ocamlc -c $<
 	
 clean:
 	rm -rf *.cmo
