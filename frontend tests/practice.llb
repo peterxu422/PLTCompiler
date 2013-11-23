@@ -56,5 +56,5 @@ void main(int a, double b, pitch c){
 	}
 	
 	//Testing return Statement
-	//return;
+	return a;
 }

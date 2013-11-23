@@ -10,15 +10,13 @@ void main() {
 	
 	printSound(retSoundLit());
 	printSound(retSoundVar());
-	return;
+	return null;
 }
-
 
 int retIntLit() {
 	return 1;
 }
 
-/*
 int retIntVar() {
 	int i;
 	i = 1;
@@ -54,4 +52,3 @@ sound retSoundVar() {
 	s = A5:1/4:100;
 	return s;
 }
-*/
