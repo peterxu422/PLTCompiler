@@ -51,6 +51,8 @@ rule token = parse
 | "return"  { RETURN }
 | "if"		{ IF }
 | "else"	{ ELSE }
+| "while"   { WHILE }  
+| "loop"	{ LOOP } 
 | id             as lxm { ID(lxm) }
 | int_lit        as lxm { INT_LIT(int_of_string lxm) }
 | dbl_lit        as lxm { DOUBLE_LIT(float_of_string lxm)}
@@ -58,46 +60,10 @@ rule token = parse
 | sound   		 as lxm { SOUND_LIT(lxm) }
 | eof       { EOF }
 
-(*| ':'       { COLON }
-| ','       { COMMA }           
-| '"'       { QUOTE }
-| '+'       { PLUS }            
-| '-'       { MINUS }
-| '*'       { TIMES }           
-| '/'       { DIVIDE }
-| '%'	    { PERCENT }			
-| '!'       { NOT }
-| '^'       { TIE }
-| "||"	    { OR }				
-| "&&"	    { AND }
-| "=="      { EQ }				
-| "!="      { NEQ } 
-| '<'       { LT }
-| '>'       { GT }
-| "<="      { LEQ }             
-| ">="          { GEQ }             
-  
-           
+(*
+| ':'       { COLON }                     
 | "for"     { FOR }
-| "while"       { WHILE }           
-
-| "function"    { FUNC }            
-| "main"        { MAIN }      	   	
-
-
-//The following below are either unnecessary or redundant
-| "int"         { INT }             
-| "double"  { DBL }
-| "pitch"   { PITCH }                     
-| "void"    { VOID }
-| "true"        { TRUE }            
-| "false"   { FALSE }
-
-| pitch   as lxm { P_LIT(lxm) }
-| dbl_lit as lxm { DBL_LIT(float_of_string lxm)}
-| ['A' - 'G']['#' 'b']?['0' - '9']  as lxm { PLITERAL(lxm) }
-| ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| "function"    { FUNC }                 	   	
 *)
 
 and comment = parse
