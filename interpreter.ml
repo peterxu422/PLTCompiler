@@ -56,11 +56,11 @@ let run (vars, funcs) =
 				  try NameMap.find f func_decls
 				  with Not_found -> raise (Failure ("undefined function " ^ f))
 				in
-(* 				let actuals, env = List.fold_left
-					(fun (actuals, env) actual -> 
-					let v, env = eval env actuals in v :: actuals, env)
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
 					([], env) actuals
-				in  *)
+				in
 				let (locals, globals) = env in
 					let globals = call fdecl (List.rev actuals) []
 					in Boolean(false), (locals, globals)
