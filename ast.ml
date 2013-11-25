@@ -1,4 +1,5 @@
-type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | And | Or
+type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | Neq | And | Or
+type unop = Neg | Not
 type typeConst = Integer | Double | Void | Pitch | Sound | Boolean
 
 type expr =
@@ -6,14 +7,22 @@ type expr =
 	| Double of float
 	| Boolean of bool
 	| Pitch of string
+	| Sound of string
 	| Id of string
 	| Array of expr list
 	| Call of string * expr list
 	| Assign of expr * expr
+	| Binop of expr * op * expr
+	| Unop of unop * expr
+	| Tie of expr
 
 type stmt =
 	  Block of stmt list
 	| Expr of expr
+	| Return of expr
+	| If of expr * stmt * stmt
+	| While of expr * stmt
+	| Loop of expr * stmt
 	
 type var_decl = {
 	varname : string;
@@ -41,6 +50,7 @@ let rec string_of_expr = function
 	| Double(d) -> string_of_float d
 	| Boolean(b) -> string_of_bool b
 	| Pitch(p) -> p
+	| Sound(s) -> s
 	| Id(s) -> s
 	| Array(s) ->
 		"[" ^ String.concat ", " (List.map string_of_expr s) ^ "]"
@@ -48,13 +58,42 @@ let rec string_of_expr = function
 		f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 	| Assign(id, stuff) -> 
 		(string_of_expr id) ^ " = " ^ (string_of_expr stuff)
+	| Binop(e1, o, e2) ->
+		string_of_expr e1 ^ " " ^
+			(match o with
+				Add			-> "+"
+			|	Sub		-> "-"
+			| Mult	-> "*"
+			| Div		-> "/"
+			| Mod		-> "%"
+			| Or		-> "||"
+			| And		-> "&&"
+			| Eq		-> "=="
+			| Neq		-> "!="
+			| Lt		-> "<"
+			| Gt		-> ">"
+			| Leq		-> "<="
+			| Geq		-> ">="
+			) ^ " " ^ string_of_expr e2
+	| Unop(o, e) ->
+		(match o with
+			Not			-> "!"
+		|	Neg			-> "-")
+		^ string_of_expr e
+	| Tie(e) -> (string_of_expr e) ^ "^"
 
 
 let rec string_of_stmt = function
 	Block(stmts) ->
 		"{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
-	| Expr(expr) ->  string_of_expr expr ^ ";\n"
-
+	| Expr(expr) -> string_of_expr expr ^ ";\n"
+	| Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
+	| If(e, s, Block([])) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
+	| If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^
+		string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
+	| While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+	| Loop(e, s) -> "loop (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+	
 let string_of_vdecl vdecl = vdecl.vartype ^ " " ^ vdecl.varname ^ ";\n"	
 let string_of_pdecl pdecl = pdecl.paramtype ^ " " ^ pdecl.paramname	
 
@@ -65,5 +104,70 @@ let string_of_fdecl fdecl =
 	"}\n"
 	
 let string_of_program (vars, funcs) =
-	String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
-	String.concat "\n" (List.map string_of_fdecl funcs)
+	String.concat "" (List.map string_of_vdecl (List.rev vars) ) ^ "\n" ^
+	String.concat "\n" (List.map string_of_fdecl (List.rev funcs) ) ^ "\n"
+	
+(*Alternative print forms with tags for debugging purposes*)
+(*
+let rec string_of_expr = function
+	  Int(i) -> "<int>" ^ string_of_int i ^ "</int>"
+	| Double(d) -> string_of_float d
+	| Boolean(b) -> string_of_bool b
+	| Pitch(p) -> p
+	| Sound(s) -> s
+	| Id(s) -> s
+	| Array(s) ->
+		"[" ^ String.concat ", " (List.map string_of_expr s) ^ "]"
+	| Call(f, el) -> 
+		f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+	| Assign(id, stuff) -> 
+		(string_of_expr id) ^ " = " ^ (string_of_expr stuff)
+	| Binop(e1, o, e2) ->
+		string_of_expr e1 ^ " " ^
+			(match o with
+				Add			-> "+"
+			|	Sub		-> "-"
+			| Mult	-> "*"
+			| Div		-> "/"
+			| Mod		-> "%"
+			| Or		-> "||"
+			| And		-> "&&"
+			| Eq		-> "=="
+			| Neq		-> "!="
+			| Lt		-> "<"
+			| Gt		-> ">"
+			| Leq		-> "<="
+			| Geq		-> ">="
+			) ^ " " ^ string_of_expr e2
+	| Unop(o, e) ->
+		(match o with
+			Not			-> "!"
+		|	Neg			-> "-")
+		^ string_of_expr e
+	| Tie(e) -> (string_of_expr e) ^ "^"
+
+let rec string_of_stmt = function
+	Block(stmts) ->
+		"{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
+	| Expr(expr) -> "<expr>" ^ string_of_expr expr ^ "; </expr>\n"
+	| Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
+	| If(e, s, Block([])) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
+	| If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^
+		string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
+	
+let string_of_vdecl vdecl = vdecl.vartype ^ " " ^ vdecl.varname ^ ";\n"	
+let string_of_pdecl pdecl = pdecl.paramtype ^ " " ^ pdecl.paramname	
+
+let string_of_fdecl fdecl =
+	"<function>\n" ^
+	fdecl.rtype ^ " " ^ fdecl.fname ^ "(" ^ String.concat ", " (List.map string_of_pdecl fdecl.formals) ^ ")\n{\n" ^
+	String.concat "" (List.map string_of_vdecl fdecl.locals) ^
+	String.concat "" (List.map string_of_stmt fdecl.body) ^
+	"}\n" ^ "</function>"
+	
+let string_of_program (vars, funcs) =
+	"<program>" ^
+	String.concat "" (List.map string_of_vdecl (List.rev vars) ) ^ "\n" ^
+	String.concat "\n" (List.map string_of_fdecl (List.rev funcs) ) ^ "\n" ^
+	"</program>\n"
+*)

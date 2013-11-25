@@ -83,6 +83,7 @@ let run (vars, funcs) =
 				locals fdecl.locals
 			in
 
+
 			(* this should actually take in env eventually. I think
 			   that the fold left will accumulate (locals, globals),
 			   which will be returned by stuff above*)
@@ -94,5 +95,8 @@ let run (vars, funcs) =
 
 let _ = 
 	let lexbuf = Lexing.from_channel stdin in 
+	(*let stmt = Parser.stmt Scanner.token lexbuf in*)
 	let program = Parser.program Scanner.token lexbuf in
-	run program
+	(*run program*)
+		print_endline (Ast.string_of_program program)
+	

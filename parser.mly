@@ -1,27 +1,47 @@
-%{ open Ast %}
+%{ open Ast 
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token LBRACK RBRACK
+let parse_error s = (* Called by the parser function on error *)
+  print_endline s;
+  flush stdout
+
+%}
+
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
+%token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG CARROT
+%token OR AND EQ NEQ LT GT LEQ GEQ
+%token RETURN IF ELSE WHILE LOOP
 
 %token <string> ID
 %token <int> INT_LIT
 %token <float> DOUBLE_LIT
 %token <bool> BOOLEAN_LIT
+%token <string> SOUND_LIT
 %token <string> PITCH_LIT
 %token <string> DATATYPE
 %token ASSIGN
 
+%nonassoc NOELSE
+%nonassoc ELSE
 %right ASSIGN
+%left	OR
+%left AND
+%left EQ NEQ
+%left LT GT LEQ GEQ
+%left PLUS MINUS
+%left TIMES DIVIDE
+%left PERCENT
+%left NOT NEG
+%left CARROT
 
-%type <Ast.program> program
 %start program
+%type <Ast.program> program
 
 %%
 
 program:
 	  /*nothing*/		{[], []}
-    | program vdecl { ($2 :: fst $1), snd $1 }
+    | program vdecl 	{ ($2 :: fst $1), snd $1 }
 	| program fdecl		{ fst $1, ($2 :: snd $1) }
 
 fdecl:
@@ -45,7 +65,7 @@ param_decl:
 		{ {	paramname = $2;
 			paramtype = $1 } }
 
- vdecl_list:   
+vdecl_list:   
        			   	     { [] }  
 	 | vdecl_list vdecl  { $2 :: $1}   
 	
@@ -58,18 +78,41 @@ stmt_list:
 	
 stmt:
 	  expr SEMI {Expr($1) }
+	| RETURN expr SEMI { Return($2) }
 	| LBRACE stmt_list RBRACE { Block(List.rev $2) }
+	| IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
+	| IF LPAREN expr RPAREN stmt ELSE stmt	  { If($3, $5, $7) }
+	| WHILE LPAREN expr RPAREN stmt			  { While($3, $5) }
+	| LOOP LPAREN expr RPAREN stmt			  { Loop($3, $5) }
 	
 expr:
-	  INT_LIT						{ Int($1) }
-    | DOUBLE_LIT                    { Double($1) }
-    | BOOLEAN_LIT                   { Boolean($1) }
-    | PITCH_LIT                     { Pitch($1) }
-	| ID							{ Id($1) }
+	  INT_LIT												{ Int($1) }
+  | DOUBLE_LIT                    { Double($1) }
+  | BOOLEAN_LIT                   { Boolean($1) }
+  | PITCH_LIT                     { Pitch($1) }
+	| SOUND_LIT											{ Sound($1) }
+	| ID														{ Id($1) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
-    | LBRACK array RBRACK           { Array(List.rev $2) }
-    | LBRACK RBRACK                 { Array([]) }
-    | expr ASSIGN expr 				{ Assign($1, $3) }
+  | LBRACK array RBRACK           { Array(List.rev $2) }
+  | LBRACK RBRACK                 { Array([]) }
+  | expr ASSIGN expr 							{ Assign($1, $3) }
+  | expr PLUS expr								{ Binop($1, Add, $3) }
+	| expr MINUS	expr							{ Binop($1, Sub, $3) }
+	| expr TIMES	expr							{ Binop($1, Mult, $3) }
+	| expr DIVIDE expr							{ Binop($1, Div, $3) }
+	| expr PERCENT expr							{ Binop($1, Mod, $3) }
+	| NOT expr											{ Unop(Not, $2) }
+	| MINUS expr										{ Unop(Neg, $2) }
+	| expr CARROT										{ Tie($1) }
+	| expr OR expr									{ Binop($1, Or, $3) }
+	| expr AND expr									{ Binop($1, And, $3) }
+	| expr EQ expr									{ Binop($1, Eq, $3) }
+	| expr NEQ expr									{ Binop($1, Neq, $3) }
+	| expr LT expr									{ Binop($1, Lt, $3) }
+	| expr GT expr									{ Binop($1, Gt, $3) }
+	| expr LEQ expr									{ Binop($1, Leq, $3) }
+	| expr GEQ expr									{ Binop($1, Geq, $3) }
+	| LPAREN expr RPAREN			{ $2 }
 
 array: 
      expr { [$1] }
