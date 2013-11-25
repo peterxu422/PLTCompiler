@@ -22,13 +22,12 @@ let run (vars, funcs) =
 
 		(* evals expressions and updates globals *)
 		let rec eval env = function
+
 			| Int(i) -> Int(i), env
-(* 			| Id(var) -> 
-				let locals, globals = env in
-				if NameMap.mem var locals then
-					(NameMap.find var locals), env
-				else if NameMap.mem var globals then
-					(NameMap.find var globals), env *)
+
+			(* THIS ISNT RIGHT *)
+			| Id(var) -> Id(var), env
+
 (* 			| Assign(var, e) ->
 				let v1, env = eval env var in
 				let e1, (locals, globals) = eval env e in *)
@@ -50,14 +49,13 @@ let run (vars, funcs) =
 			   hits the Call("print", [e]) match  
 			*)
 			| Call(f, actuals) -> 
-				print_endline "actuals: ";
-				print_endline (Ast.string_of_expr (List.hd actuals));
 				let fdecl =
 				  try NameMap.find f func_decls
 				  with Not_found -> raise (Failure ("undefined function " ^ f))
 				in
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
+						print_endline (Ast.string_of_expr actual);
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) actuals
 				in
@@ -88,12 +86,10 @@ let run (vars, funcs) =
 			(* this should actually take in env eventually. I think
 			   that the fold left will accumulate (locals, globals),
 			   which will be returned by stuff above*)
-(* 			print_endline ("calling " ^ fdecl.fname );
-			print_endline ("body:  " ^ string_of_fdecl fdecl); *)
-	    	(* List.fold_left exec (2) fdecl.body *)
 	    	snd (List.fold_left exec (locals, globals) fdecl.body)
 
 		in
+		(* needs globals i think *)
 	    call (NameMap.find "main" func_decls) [] []
 
 let _ = 
