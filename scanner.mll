@@ -25,23 +25,8 @@ rule token = parse
 | ','				{ COMMA }
 | '['       { LBRACK }          
 | ']'       { RBRACK }
-| '=' 		{ ASSIGN }
-| "int"     { DATATYPE("int") }
-| "double"  { DATATYPE("double") }
-| "boolean" { DATATYPE("boolean") }
-| "pitch"   { DATATYPE("pitch") }
-| "void"    { DATATYPE("void") }
-| id             as lxm { ID(lxm) }
-| int_lit        as lxm { INT_LIT(int_of_string lxm) }
-| dbl_lit        as lxm { DOUBLE_LIT(float_of_string lxm)}
-| pitch          as lxm { PITCH_LIT(lxm)}
-| "true"|"false" as lxm {BOOLEAN_LIT(bool_of_string lxm)}
-| eof       { EOF }
-
-(*| ':'       { COLON }
-| ','       { COMMA }           
-| '"'       { QUOTE }
-| '+'       { PLUS }            
+| '=' 			{ ASSIGN }
+| '+'       { PLUS }
 | '-'       { MINUS }
 | '*'       { TIMES }           
 | '/'       { DIVIDE }
