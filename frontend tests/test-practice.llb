@@ -1,0 +1,60 @@
+int i;
+double d;
+boolean b;
+pitch p;
+sound s;
+
+
+void main(int a, double b, pitch c){
+	int i;
+	int g;
+	double f;
+	//int a[]; //Need to include arrays
+	
+	i = 5;
+	//sound a; //Cannot declare var here, must be in the beginning
+	print(5);
+	true = true;
+	hello = world;
+	false;
+	[1, 2, 3];
+	print(4.5);
+	
+	
+	//Testing pitch literals
+	p = A0;
+	p = A#5;
+	p = Ab5;
+	p = C10;
+	p = Cb10;
+	p = D#10;
+	
+	//p = A10;
+	//p = G11;
+	//p = G#10;
+	//p = A#b5;
+	
+	
+	//Testing sound literals
+	s = A5:1/4:100;
+	s = sound_id:fract_id:10;
+	s = [s_id1, s_id2, s_id3]:1/4:100;
+	s = [A5, B1, G9]:3/8:100;
+	
+	//Testing double literals
+	d = 0.5;
+	d=1.9999;
+	
+	//Testing boolean
+	b = true;
+	
+	//Testing if Statement
+	
+	if(true) 
+	{
+		d = 0.5;
+	}
+	
+	//Testing return Statement
+	return a;
+}
