@@ -70,8 +70,15 @@ vdecl_list:
 	 | vdecl_list vdecl  { $2 :: $1}   
 	
 vdecl: 
-    DATATYPE ID SEMI { {varname = $2; vartype = $1} }
-	
+     DATATYPE ID SEMI { {varname = $2; vartype = $1} }
+
+/*
+arr_decl:
+	DATATYPE LBRACK RBRACK ID SEMI
+	{ { arrtype = $1;
+		arrname = $4 } }
+*/
+
 stmt_list:
 	/* nothing */ { [] }
 	| stmt_list stmt { $2 :: $1 }
@@ -93,8 +100,7 @@ expr:
 	| SOUND_LIT											{ Sound($1) }
 	| ID														{ Id($1) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
-  | LBRACK array RBRACK           { Array(List.rev $2) }
-  | LBRACK RBRACK                 { Array([]) }
+  | LBRACK actuals_opt RBRACK           { Array(List.rev $2) }
   | expr ASSIGN expr 							{ Assign($1, $3) }
   | expr PLUS expr								{ Binop($1, Add, $3) }
 	| expr MINUS	expr							{ Binop($1, Sub, $3) }
@@ -114,10 +120,6 @@ expr:
 	| expr GEQ expr									{ Binop($1, Geq, $3) }
 	| LPAREN expr RPAREN			{ $2 }
 
-array: 
-     expr { [$1] }
-    | array COMMA expr { $3 :: $1 }
-	
 actuals_opt:
 	/*nothing*/ 	{ [] }
 	| actuals_list	{List.rev $1}
