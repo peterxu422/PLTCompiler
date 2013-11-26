@@ -24,21 +24,36 @@ let run (vars, funcs) =
 		let rec eval env = function
 
 			| Int(i) -> Int(i), env
-
+			| Pitch(p) -> Pitch(p), env
 			(* THIS ISNT RIGHT *)
 			| Id(var) -> Id(var), env
 
 (* 			| Assign(var, e) ->
 				let v1, env = eval env var in
 				let e1, (locals, globals) = eval env e in *)
-
-
+			
+			(* Arrays *)
+			| Array(e) -> Array(e), env
+			
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, _ = eval env e in
+				
+				let rec print = function
+					Int(i) -> string_of_int i
+					| Pitch(p) -> p
+					| Sound(s) -> s
+					| Array(a) -> "[" ^ build a ^ "]" and build = function
+							hd :: [] -> (print hd)
+							| hd :: tl -> ((print hd) ^ "," ^ (build tl))
+					| _ -> raise (Failure ("Item cannot be printed"))
+				in
+					print_endline (print v);
+					Int(0), env
+					(*
 					print_endline ("in print");
 					print_endline (Ast.string_of_expr v);
-					Boolean(false), env
+					Boolean(false), env*)
 
 			(* this does function calls. currently doesn't eval arguments,
 			   update variables, etc. It just sets fdecl, then we define a 
@@ -97,6 +112,6 @@ let _ =
 	let lexbuf = Lexing.from_channel stdin in 
 	(*let stmt = Parser.stmt Scanner.token lexbuf in*)
 	let program = Parser.program Scanner.token lexbuf in
-	(*run program*)
-		print_endline (Ast.string_of_program program)
+	run program
+		(*print_endline (Ast.string_of_program program)*)
 	
