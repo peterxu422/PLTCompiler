@@ -101,6 +101,7 @@ expr:
 	| ID														{ Id($1) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
   | LBRACK actuals_opt RBRACK           { Array(List.rev $2) }
+  | ID index_opt						{ Index($1, $2) }
   | expr ASSIGN expr 							{ Assign($1, $3) }
   | expr PLUS expr								{ Binop($1, Add, $3) }
 	| expr MINUS	expr							{ Binop($1, Sub, $3) }
@@ -127,3 +128,10 @@ actuals_opt:
 actuals_list:
 	  expr						{ [$1] }
 	| actuals_list COMMA expr 	{ $3 :: $1 }
+
+index_opt:
+	indices { List.rev $1 }
+	
+indices:
+	  LBRACK expr RBRACK { [$2] }
+	| indices LBRACK expr RBRACK { $3 :: $1 }
