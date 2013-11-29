@@ -55,22 +55,41 @@ let run (vars, funcs) =
 				(* The local identifiers have already been added to ST in the first pass. 
 				Checks if it is indeed in there.*)
 				if NameMap.mem name locals then	
-					v, (NameMap.add name v locals, globals) (* Updates the var in the ST to evaluated expression e, which is stored in v*)
+				(* Updates the var in the ST to evaluated expression e, which is stored in v. 
+				Returns v as the value because this is the l-value*)
+					v, (NameMap.add name v locals, globals) 
 				else if NameMap.mem name globals then
 					v, (locals, NameMap.add name v globals)
 				else raise (Failure ("undeclared identifier " ^ name))
-				(*| Index(name, indices) -> 
+				| Index(name, indices) -> 
 					let rec getIndex = function
 						Int(i) -> i
-						| Id(i) -> let idx, v = eval env (Id(i)) in getIndex idx (*Need to call getIndexFromVar again because function needs to return only 1 value*)
+						(*| Id(i) -> let idx, v = eval env (Id(i)) in getIndex idx*) (*Need to call getIndexFromVar again because function needs to return only 1 value*)
 						| _ -> raise (Failure ("Illegal index"))
 					in
-					if NameMap.mem name locals then*)
+					let rec setElt exprs = function
+						[] -> raise (Failure ("Cannot assign to empty array"))
+						| hd :: [] -> let idx = getIndex hd in
+							if idx < (List.length exprs) then
+								let arr = (Array.of_list exprs) in arr.(idx) <- v; Array.to_list arr
+							else
+								raise (Failure ("Invalid index " ^ string_of_int idx ^ " for array " ^ name))
+						in
+					if NameMap.mem name locals then
+						let exprList = (match (NameMap.find name locals) with
+							Array(a) -> a
+							| _ -> raise (Failure (name ^ " is not an array"))) in
+						let newArray = Array(setElt exprList indices) in
+						v, (NameMap.add name newArray locals, globals)
+					else if (NameMap.mem name globals) then
+						let exprList = (match (NameMap.find name locals) with
+							Array(a) -> a
+							| _ -> raise (Failure (name ^ " is not an array"))) in
+						let newArray = Array(setElt exprList indices) in
+						v, (locals, NameMap.add name newArray globals)
+					else
+						raise (Failure (name ^ " was not properly initialized as an array"))
 			| _ -> raise (Failure ("Can only assign variables or array indices")))
-			(*
-				let v1, env = eval env var in
-				let e1, (locals, globals) = eval env e in 
-			*)
 			(* Arrays *)
 			| Array(e) -> Array(e), env
 			(* our special print function, only supports ints right now *)
