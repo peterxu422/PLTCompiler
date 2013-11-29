@@ -6,19 +6,21 @@ sound s;
 
 
 void main(){
-	int i;
 	int g;
 	double f;
-	sound s;
-	//int a[]; //Need to include arrays
+	int[] a; //Need to include arrays
+	/*
 	i = 15;
 	f = 2.5;
 	s = A5:1/4:100;
+	*/
+	//i = a[0];
+	a = [0,1,2,3,4];
 	
-	print(i);
-	print(f);
+	print(a[3]);
+	/*print(f);
 	print(s);
-	/*
+	
 	print(1);
 	print(3.14);
 	print(true);

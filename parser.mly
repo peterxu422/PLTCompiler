@@ -93,33 +93,33 @@ stmt:
 	| LOOP LPAREN expr RPAREN stmt			  { Loop($3, $5) }
 	
 expr:
-	  INT_LIT												{ Int($1) }
+	  INT_LIT					  { Int($1) }
   | DOUBLE_LIT                    { Double($1) }
   | BOOLEAN_LIT                   { Boolean($1) }
   | PITCH_LIT                     { Pitch($1) }
-	| SOUND_LIT											{ Sound($1) }
-	| ID														{ Id($1) }
-	| ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
-  | LBRACK actuals_opt RBRACK           { Array(List.rev $2) }
-  | ID index_opt						{ Index($1, $2) }
-  | expr ASSIGN expr 							{ Assign($1, $3) }
-  | expr PLUS expr								{ Binop($1, Add, $3) }
-	| expr MINUS	expr							{ Binop($1, Sub, $3) }
-	| expr TIMES	expr							{ Binop($1, Mult, $3) }
-	| expr DIVIDE expr							{ Binop($1, Div, $3) }
-	| expr PERCENT expr							{ Binop($1, Mod, $3) }
-	| NOT expr											{ Unop(Not, $2) }
-	| MINUS expr										{ Unop(Neg, $2) }
-	| expr CARROT										{ Tie($1) }
-	| expr OR expr									{ Binop($1, Or, $3) }
-	| expr AND expr									{ Binop($1, And, $3) }
-	| expr EQ expr									{ Binop($1, Eq, $3) }
-	| expr NEQ expr									{ Binop($1, Neq, $3) }
-	| expr LT expr									{ Binop($1, Lt, $3) }
-	| expr GT expr									{ Binop($1, Gt, $3) }
-	| expr LEQ expr									{ Binop($1, Leq, $3) }
-	| expr GEQ expr									{ Binop($1, Geq, $3) }
-	| LPAREN expr RPAREN			{ $2 }
+  | SOUND_LIT				   	  { Sound($1) }
+  | ID index_opt				  { Index($1, $2) }
+  | ID								{ Id($1) }
+  | ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
+  | LBRACK actuals_opt RBRACK           { Array($2) }
+  | expr ASSIGN expr 					{ Assign($1, $3) }
+  | expr PLUS expr						{ Binop($1, Add, $3) }
+	| expr MINUS	expr				{ Binop($1, Sub, $3) }
+	| expr TIMES	expr				{ Binop($1, Mult, $3) }
+	| expr DIVIDE expr					{ Binop($1, Div, $3) }
+	| expr PERCENT expr					{ Binop($1, Mod, $3) }
+	| NOT expr							{ Unop(Not, $2) }
+	| MINUS expr						{ Unop(Neg, $2) }
+	| expr CARROT						{ Tie($1) }
+	| expr OR expr						{ Binop($1, Or, $3) }
+	| expr AND expr						{ Binop($1, And, $3) }
+	| expr EQ expr						{ Binop($1, Eq, $3) }
+	| expr NEQ expr						{ Binop($1, Neq, $3) }
+	| expr LT expr						{ Binop($1, Lt, $3) }
+	| expr GT expr						{ Binop($1, Gt, $3) }
+	| expr LEQ expr						{ Binop($1, Leq, $3) }
+	| expr GEQ expr						{ Binop($1, Geq, $3) }
+	| LPAREN expr RPAREN				{ $2 }
 
 actuals_opt:
 	/*nothing*/ 	{ [] }

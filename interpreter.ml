@@ -29,7 +29,18 @@ let run (vars, funcs) =
 			| Boolean(b) -> Boolean(b), env
 			| Pitch(p) -> Pitch(p), env
 			| Sound(s) -> Sound(s), env
-			(* THIS ISNT RIGHT *)
+			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
+				let rec lookup arr indices =
+					let arr = match arr with
+						Array(n) -> n
+						| _ -> raise (Failure(a ^ " is not an array. Cannot access index"))
+					in
+					match indices with
+					[] -> raise (Failure ("Error indexing array without indices"))
+					| Int(i) :: [] -> List.nth arr i, env
+					| _ -> raise (Failure "Invalid index")
+				in
+				lookup v i
 			| Id(var) -> 
 			let locals, globals = env in
 			if NameMap.mem var locals then
@@ -44,10 +55,17 @@ let run (vars, funcs) =
 				(* The local identifiers have already been added to ST in the first pass. 
 				Checks if it is indeed in there.*)
 				if NameMap.mem name locals then	
-					v, (NameMap.add name v locals, globals) (* Updates the var in the ST to evaluated expression e *)
+					v, (NameMap.add name v locals, globals) (* Updates the var in the ST to evaluated expression e, which is stored in v*)
 				else if NameMap.mem name globals then
 					v, (locals, NameMap.add name v globals)
 				else raise (Failure ("undeclared identifier " ^ name))
+				(*| Index(name, indices) -> 
+					let rec getIndex = function
+						Int(i) -> i
+						| Id(i) -> let idx, v = eval env (Id(i)) in getIndex idx (*Need to call getIndexFromVar again because function needs to return only 1 value*)
+						| _ -> raise (Failure ("Illegal index"))
+					in
+					if NameMap.mem name locals then*)
 			| _ -> raise (Failure ("Can only assign variables or array indices")))
 			(*
 				let v1, env = eval env var in
@@ -55,7 +73,6 @@ let run (vars, funcs) =
 			*)
 			(* Arrays *)
 			| Array(e) -> Array(e), env
-			
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = eval env e in
@@ -76,7 +93,7 @@ let run (vars, funcs) =
 					(*
 					print_endline ("in print");
 					print_endline (Ast.string_of_expr v);
-					Boolean(false), env*)
+					Boolean(false), env *)
 
 			(* this does function calls. currently doesn't eval arguments,
 			   update variables, etc. It just sets fdecl, then we define a 
@@ -136,4 +153,3 @@ let _ =
 	let program = Parser.program Scanner.token lexbuf in
 	run program
 		(*print_endline (Ast.string_of_program program)*)
-	
