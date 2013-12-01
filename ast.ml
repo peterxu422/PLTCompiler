@@ -10,6 +10,7 @@ type expr =
 	| Sound of string
 	| Id of string
 	| Array of expr list
+	| Index of string * expr list
 	| Call of string * expr list
 	| Assign of expr * expr
 	| Binop of expr * op * expr
@@ -54,6 +55,7 @@ let rec string_of_expr = function
 	| Id(s) -> s
 	| Array(s) ->
 		"[" ^ String.concat ", " (List.map string_of_expr s) ^ "]"
+	| Index(s, i) -> s ^ "[" ^ String.concat "[" (List.map string_of_expr i) ^ "]"
 	| Call(f, el) -> 
 		f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 	| Assign(id, stuff) -> 
