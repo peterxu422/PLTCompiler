@@ -16,6 +16,8 @@ scanner: scanner.ml
 interpreter: interpreter.ml
 	ocamlc -c interpreter.ml
 
+test:
+	./interpret < ./tests/nathan.tests.llb
 
 .PHONY:
 clean:
