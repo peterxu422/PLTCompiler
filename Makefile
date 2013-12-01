@@ -17,7 +17,8 @@ interpreter: interpreter.ml
 	ocamlc -c interpreter.ml
 
 test:
-	./interpret < ./tests/nathan.tests.llb
+	./testall.sh
+#	./interpret < ./tests/nathan.tests.llb
 
 .PHONY:
 clean:
