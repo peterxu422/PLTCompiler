@@ -1,0 +1,37 @@
+int i;
+double d;
+boolean b;
+pitch p;
+sound s;
+
+
+void main(){
+        
+        /* testing IF/ELSE */
+        if (false){
+            print(2);
+        } else {
+            print(3);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+        /* testing WHILE 
+        i = 10;
+        while (i<15){
+            print(i);
+            i = 16;
+        }
+        */
+
+        /* testing FOR */
+}
