@@ -18,7 +18,6 @@ interpreter: interpreter.ml
 
 test:
 	./testall.sh
-#	./interpret < ./tests/nathan.tests.llb
 
 .PHONY:
 clean:

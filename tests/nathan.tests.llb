@@ -1,8 +1,0 @@
-void main(){
-	print(5);
-	bar(19);
-}
-
-void bar(int a) {
-	print(a);
-}

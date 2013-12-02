@@ -1,2 +1,7 @@
-#!/bin/sh
-echo hi there
+echo "
+     /*
+      ##########################################
+      AWAITING PROPER TESTING SCRIPT FROM ANDREW
+      ##########################################
+      */
+      "
