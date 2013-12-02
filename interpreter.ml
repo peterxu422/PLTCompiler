@@ -52,7 +52,7 @@ let run (vars, funcs) =
 			| Double(d) -> Double(d), env
 			| Boolean(b) -> Boolean(b), env
 			| Pitch(p) -> Pitch(p), env
-			| Sound(s) -> Sound(s), env
+			| Sound(p,d,a) -> Sound(p,d,a), env
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
 				let rec lookup arr indices =
 					let arr = match arr with
@@ -213,7 +213,7 @@ let run (vars, funcs) =
 					| Double(d) -> string_of_float d
 					| Boolean(b) -> string_of_bool b
 					| Pitch(p) -> p
-					| Sound(s) -> s
+					| Sound(p,d,a) -> p ^ ":" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ "," ^ (build tl))
@@ -239,7 +239,7 @@ let run (vars, funcs) =
 				let file = "bytecode" in
 				let oc = open_out file in
 				let rec writeByteCode = function
-					Sound(s) -> s
+					Sound(p,d,a) -> "[" ^ p ^ "]:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (writeByteCode hd)
 							| hd :: tl -> ((writeByteCode hd) ^ "," ^ (build tl))

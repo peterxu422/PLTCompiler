@@ -6,7 +6,7 @@ let parse_error s = (* Called by the parser function on error *)
 
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA COLON
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
 %token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG CARROT
 %token OR AND EQ NEQ LT GT LEQ GEQ
@@ -16,7 +16,7 @@ let parse_error s = (* Called by the parser function on error *)
 %token <int> INT_LIT
 %token <float> DOUBLE_LIT
 %token <bool> BOOLEAN_LIT
-%token <string> SOUND_LIT
+/*%token <string> SOUND_LIT*/
 %token <string> PITCH_LIT
 %token <string> DATATYPE
 %token ASSIGN
@@ -96,8 +96,8 @@ expr:
 	  INT_LIT					  { Int($1) }
   | DOUBLE_LIT                    { Double($1) }
   | BOOLEAN_LIT                   { Boolean($1) }
+  | PITCH_LIT COLON DOUBLE_LIT COLON INT_LIT 	  { Sound($1, $3, $5) }
   | PITCH_LIT                     { Pitch($1) }
-  | SOUND_LIT				   	  { Sound($1) }
   | ID index_opt				  { Index($1, $2) }
   | ID								{ Id($1) }
   | ID LPAREN actuals_opt RPAREN 	{ Call($1, $3) }
@@ -120,7 +120,7 @@ expr:
 	| expr LEQ expr						{ Binop($1, Leq, $3) }
 	| expr GEQ expr						{ Binop($1, Geq, $3) }
 	| LPAREN expr RPAREN				{ $2 }
-
+	
 actuals_opt:
 	/*nothing*/ 	{ [] }
 	| actuals_list	{List.rev $1}
