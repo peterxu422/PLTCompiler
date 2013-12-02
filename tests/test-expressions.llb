@@ -1,0 +1,22 @@
+void main()
+{
+	sound s;
+	print(a + b);
+	print(a - b);
+	print(a * b);
+	print(a / b);
+	print(a % b);
+	a = a + b;
+	a = !a;
+	a = -a;
+	s = [A5, B1, G9]:3/8:100^;
+	print(a || b);
+	print(a && b);
+	print(a == b);
+	print(a != b);
+	print(a < b);
+	print(a > b);
+	print(a <= b);
+	print(a >= b);
+	print((2+2)*2);
+}
