@@ -22,15 +22,15 @@ rule token = parse
 | '{'       { LBRACE }          
 | '}'       { RBRACE }
 | ';'       { SEMI }
-| ','				{ COMMA }
+| ','		{ COMMA }
 | '['       { LBRACK }          
 | ']'       { RBRACK }
-| '=' 			{ ASSIGN }
+| '=' 		{ ASSIGN }
 | '+'       { PLUS }
 | '-'       { MINUS }
 | '*'       { TIMES }           
 | '/'       { DIVIDE }
-| '%'	    	{ PERCENT }	
+| '%'	    { PERCENT }	
 | '!'       { NOT }
 | '^'       { CARROT }
 | "||"	    { OR }
@@ -40,31 +40,36 @@ rule token = parse
 | '<'       { LT }
 | '>'       { GT }
 | "<="      { LEQ }             
-| ">="      { GEQ }  
+| ">="      { GEQ }
+
+(*Types*)
+| "int[]"     { DATATYPE("intArr") }
+| "double[]"  { DATATYPE("doubleArr") }
+| "boolean[]" { DATATYPE("booleanArr") }
+| "pitch[]"   { DATATYPE("pitchArr") }
+| "sound[]"   { DATATYPE("soundArr") } 
+
 | "int"     { DATATYPE("int") }
 | "double"  { DATATYPE("double") }
 | "boolean" { DATATYPE("boolean") }
 | "pitch"   { DATATYPE("pitch") }
 | "sound"   { DATATYPE("sound") } 
 | "void"    { DATATYPE("void") }
+
 | "true"|"false" as lxm { BOOLEAN_LIT(bool_of_string lxm)}
 | "return"  { RETURN }
 | "if"		{ IF }
 | "else"	{ ELSE }
 | "while"   { WHILE }  
-| "loop"	{ LOOP } 
-| id             as lxm { ID(lxm) }
+| "loop"	{ LOOP }
+
+(* Type Literals must be evaluated before identifiers *)
 | int_lit        as lxm { INT_LIT(int_of_string lxm) }
 | dbl_lit        as lxm { DOUBLE_LIT(float_of_string lxm)}
 | pitch          as lxm { PITCH_LIT(lxm)}
 | sound   		 as lxm { SOUND_LIT(lxm) }
+| id             as lxm { ID(lxm) }
 | eof       { EOF }
-
-(*
-| ':'       { COLON }                     
-| "for"     { FOR }
-| "function"    { FUNC }                 	   	
-*)
 
 and comment = parse
 "*/"    { token lexbuf }
