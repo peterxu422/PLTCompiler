@@ -1,4 +1,5 @@
 open Ast 
+open Printf
 
 module NameMap = Map.Make(struct
 	type t = string
@@ -122,6 +123,34 @@ let run (vars, funcs) =
 			   print() function, which gets evaled in the Expr match, which
 			   hits the Call("print", [e]) match  
 			*)
+			| Call ("mixdown", [e]) ->
+				let v, env = eval env e in
+				let file = "bytecode" in
+				let oc = open_out file in
+				let rec writeByteCode = function
+					Sound(s) -> s
+					| Array(a) -> "[" ^ build a ^ "]" and build = function
+							hd :: [] -> (writeByteCode hd)
+							| hd :: tl -> ((writeByteCode hd) ^ "," ^ (build tl))
+					| _ -> raise (Failure ("Item cannot be mixdown"))
+				in 
+					(* let append_string path s =
+    					let chan = open_out_gen [Open_wronly; Open_creat] 0o666 path
+    					in let len = out_channel_length chan
+    					in
+    					    begin
+    					    seek_out chan len;
+    					    output_string chan s;
+    					    close_out chan;
+    					    end
+    				append_string file (writeByteCode v); *)
+					(*  *)
+					fprintf oc "%s\n" (writeByteCode v);
+					flush oc;
+					(*  *)
+					
+					Int(0), env
+
 			| Call(f, actuals) -> 
 				let fdecl =
 				  try NameMap.find f func_decls
