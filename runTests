@@ -1,0 +1,103 @@
+#!/usr/bin/env ruby
+
+argsString = ARGV.join.gsub('-', '')
+
+if defined?(argsString) && argsString.include?("d")
+	dump_flag = true 
+else 
+	dump_flag = false
+end
+
+if defined?(argsString) && argsString.include?("w")
+	supress_string = " > /dev/null 2>&1"
+else 
+	supress_string = ""
+end
+
+if defined?(argsString) && argsString.include?("o")
+	show_output = true
+else 
+	show_output = false
+end
+
+# remove junk and compile 
+`rm interpret > /dev/null 2>&1`
+`rm printAst > /dev/null 2>&1`
+`rm *.cmo > /dev/null 2>&1`
+`rm *.cmi > /dev/null 2>&1`
+`ocamllex scanner.mll #{supress_string}`
+`ocamlyacc parser.mly #{supress_string}`
+`ocamlc -c ast.ml #{supress_string}`
+`ocamlc -c parser.mli #{supress_string}`
+`ocamlc -c scanner.ml #{supress_string}`
+`ocamlc -c parser.ml #{supress_string}`
+`ocamlc -c printAst.ml #{supress_string}`
+`ocamlc -c interpreter.ml #{supress_string}`
+`ocamlc -o interpret ast.cmo parser.cmo scanner.cmo interpreter.cmo #{supress_string}`
+`ocamlc -o printAst ast.cmo parser.cmo scanner.cmo printAst.cmo #{supress_string}`
+
+#
+# Frontend tests!
+# Not totally sure on this one...
+# if it gets to the AST it means everything was 
+# parsed correctly but I'm not sure if there could
+# still be something wrong. More research required
+#
+
+puts "\n\n\e[47m\e[30mFrontend Tests:\e[0m"
+# puts "\n\nFrontend Tests:"
+all_pass = true
+Dir['tests/*.llb'].each do |filePath| 
+	output = `./printAst < "#{filePath}"`
+
+	if output == "syntax error\n"
+		puts "\e[31m#{filePath}"
+		all_pass = false
+	end
+end
+if all_pass == true
+	puts "\e[32mAll frontend test files were correctly parsed."
+end
+print "\e[0m"
+
+
+#
+# Backend tests!
+# For each .out file in the tests directory,
+# find the corresponding .llb file,
+# run it,
+# and compare the .out file to the actual output
+#
+
+puts "\n\n\e[47m\e[30mBackend Tests:\e[39m\e[0m"
+# puts "\n\nBackend Tests:"
+Dir['tests/*.out'].each do |filePath|
+	expected_output = File.read(filePath)
+	test_file = filePath.gsub('.out', '.llb')
+	
+	print "\e[0m"
+
+	actual_output = `./interpret < #{test_file}`
+	test_name = test_file.gsub('tests/', '')
+						 .gsub('.llb', '') 
+
+	if expected_output == actual_output
+		puts "\e[32m" + test_name + " passed!\e[0m"
+	elsif expected_output == actual_output && show_output
+		puts "\e[32m" + test_name + " passed!\e[0m"
+		puts expected_output if dump_flag == false
+		puts expected_output.dump if dump_flag == true
+	else 
+		puts "\e[31m" + test_name + " failed. It could be a whitespace issue! Run with -d to see whitespace"
+		puts "\e[37m---Expected_output: \n" + expected_output if dump_flag == false
+		puts "\e[31m---Actual output: \n" + actual_output if dump_flag == false
+		puts "\e[37m---Expected_output: \n" + expected_output.dump if dump_flag == true
+		puts "\e[31m---Actual output: \n" + actual_output.dump if dump_flag == true
+	end
+end
+
+puts "\e[0m"
+
+
+
+
