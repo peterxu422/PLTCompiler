@@ -62,7 +62,10 @@ let run (vars, funcs) =
 					in
 					match indices with
 					[] -> raise (Failure ("Error indexing array without indices"))
-					| Int(i) :: [] -> List.nth arr i, env
+					| Int(i) :: [] -> 
+					try
+						List.nth arr i, env
+					with Failure("nth") -> raise (Failure "Index out of bounds")
 					| _ -> raise (Failure "Invalid index")
 				in
 				lookup v i
@@ -87,10 +90,15 @@ let run (vars, funcs) =
 					v, (locals, NameMap.add name v globals)
 				else raise (Failure ("undeclared identifier " ^ name))
 				| Index(name, indices) -> 
-					let rec getIndex = function
-						Int(i) -> i
-						(*| Id(i) -> let idx, v = eval env (Id(i)) in getIndex idx*) (*Need to call getIndexFromVar again because function needs to return only 1 value*)
-						| _ -> raise (Failure ("Illegal index"))
+					let rec getIndex e = 
+						let v, env = eval env e in 
+						(match v with
+							Int(i) -> i
+							(*| Id(i) -> let idx, v = eval env (Id(i)) in getIndex idx*) (*Need to call getIndexFromVar again because function needs to return only 1 value*)
+							| e ->
+								print_endline (string_of_expr e);
+							 	raise (Failure ("Illegal index"))
+					)
 					in
 					let rec setElt exprs = function
 						[] -> raise (Failure ("Cannot assign to empty array"))
