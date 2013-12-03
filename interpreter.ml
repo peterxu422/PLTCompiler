@@ -253,12 +253,13 @@ let run (vars, funcs) =
 					(*  *)
 					
 					Int(0), env
-
+			(* for arrays eyes only *)
 			| Call("length",[e]) -> 
 				let v, env = eval env e in
 				(match v with
 					  Array(a) -> Int(List.length a), env
-					| _ -> print_endline "something"; Int(2), env)
+					| _ -> raise (Failure ("Length can only be called on arrays"))
+				)
 			(* this does function calls. *)
 			| Call(f, actuals) -> 
 				let fdecl =

@@ -8,4 +8,6 @@ void main(){
 	print(length(one));
 	print(length(two));
 	print(length(three));
+	print(length([]));
+	/* print(length(1)); length can only be called on arrays*/
 }
