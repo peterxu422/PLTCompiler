@@ -7,9 +7,9 @@ void main(){
 	pitch b;
 	sound c;
 
-	a = A4:0.5:100;
+	a = |A4, A5, B6, B7|:0.5:100;
 	b = B5;
-	c = C2:5.0:1;
+	c = |C2|:5.0:1;
 
 	one = [1];
 	two = [1, 2];

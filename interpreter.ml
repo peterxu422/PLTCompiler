@@ -216,7 +216,7 @@ let run (vars, funcs) =
 					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
-							| hd :: tl -> ((print hd) ^ "," ^ (build tl))
+							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
 					| _ -> raise (Failure ("Item cannot be printed"))
 				in
 					print_endline (print v);
@@ -271,7 +271,12 @@ let run (vars, funcs) =
 			| Call("getPitch", [e]) ->
 				let v, env = eval env e in
 				(match v with
-					  Sound(p,d,a) -> Pitch(p), env
+					  Sound(p,d,a) -> 
+					  let rec strings_to_pitches = function
+					  		  hd :: [] -> [Pitch(hd)]
+					  		| hd :: tl -> [Pitch(hd)] @ strings_to_pitches tl
+					  in
+					  Array(List.rev(strings_to_pitches p)), env
 					| Pitch(p) -> Pitch(p), env
 					| _ -> raise (Failure ("getPitch can only be called on sounds or pitches"))
 				)
