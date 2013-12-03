@@ -15,12 +15,15 @@ void main(){
 	s = A5:1/4:100;
 	*/
 	//i = a[0];
-	a = [0,1,2.5,3.2,4];
+	//a = [0,1,2.5,3.2,4];
 	
+	print(A5:0.25:100);
+	
+	/*
 	print(a);
 	a[3] = A5;
 	print(a);
-	/*print(f);
+	print(f);
 	print(s);
 	
 	print(1);
