@@ -226,14 +226,6 @@ let run (vars, funcs) =
 					print_endline (Ast.string_of_expr v);
 					Boolean(false), env *)
 
-			(* this does function calls. currently doesn't eval arguments,
-			   update variables, etc. It just sets fdecl, then we define a 
-			   function called exec that executes statements. Then, we go 
-			   through all the statements in the function definition and
-			   call exec on them, which pattern matches below. We hit the
-			   print() function, which gets evaled in the Expr match, which
-			   hits the Call("print", [e]) match  
-			*)
 			| Call ("mixdown", [e]) ->
 				let v, env = eval env e in
 				let file = "bytecode" in
@@ -262,6 +254,12 @@ let run (vars, funcs) =
 					
 					Int(0), env
 
+			| Call("length",[e]) -> 
+				let v, env = eval env e in
+				(match v with
+					  Array(a) -> Int(List.length a), env
+					| _ -> print_endline "something"; Int(2), env)
+			(* this does function calls. *)
 			| Call(f, actuals) -> 
 				let fdecl =
 				  try NameMap.find f func_decls

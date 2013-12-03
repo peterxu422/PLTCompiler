@@ -1,0 +1,11 @@
+void main(){
+	int[] one;
+	int[] two;
+	int[] three;
+	one = [1];
+	two = [1, 2];
+	three = [1, 2, 3];
+	print(length(one));
+	print(length(two));
+	print(length(three));
+}
