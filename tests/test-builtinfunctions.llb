@@ -2,12 +2,19 @@ void main(){
 	int[] one;
 	int[] two;
 	int[] three;
+	sound a;
+	pitch b;
+	a = A4:0.5:100;
+	b = B5;
 	one = [1];
 	two = [1, 2];
 	three = [1, 2, 3];
+	print(getPitch(a));
+	print(getPitch(b));
 	print(length(one));
 	print(length(two));
 	print(length(three));
 	print(length([]));
+
 	/* print(length(1)); length can only be called on arrays*/
 }

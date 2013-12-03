@@ -253,6 +253,14 @@ let run (vars, funcs) =
 					(*  *)
 					
 					Int(0), env
+			(* for pitches and sounds *)
+			| Call("getPitch", [e]) ->
+				let v, env = eval env e in
+				(match v with
+					  Sound(p,d,a) -> Pitch(p), env
+					| Pitch(p) -> Pitch(p), env
+					| _ -> raise (Failure ("getPitch can only be called on sounds or pitches"))
+				)
 			(* for arrays eyes only *)
 			| Call("length",[e]) -> 
 				let v, env = eval env e in
