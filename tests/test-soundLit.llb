@@ -1,7 +1,7 @@
 void main() {
 	sound s;
 	sound s1;
-	//pitch p[];
+	pitch[] p;
 	double timesig;
 	int duration;
 	
@@ -10,16 +10,16 @@ void main() {
 	duration = 100;
 	
 	//Valid Cases
-	s = A5:1/4:100;
+	s = |A5|:0.25:100;
 	printSound(s);
 	
-	s = p:timesig:duration;
-	printSound(s);
+	//s = |p|:timesig:duration;
+	//printSound(s);
 	
-	s = [s_id1, s_id2, s_id3]:1/4:100;
-	printSound(s);
+	//s = |s_id1, s_id2, s_id3|:0.25:100;
+	//printSound(s);
 	
-	s = [A5, B1, G9]:3/8:100;
+	s = |A5, B1, G9|:0.25:100;
 	printSound(s);
 	
 	/*
@@ -27,7 +27,7 @@ void main() {
 	s = 5;					//Can't assign only an int
 	s = A5;					//Can't assign only a pitch
 	s = [A5, B4, G3];		//Can't assign only pitch lit
-	s = p:1:100;			//Can't assign an int to the time sig
+	s = |p|:1:100;			//Can't assign an int to the time sig
 	
 	//?
 	s = p:timesig:200;		//Allowed to assign amplitude greater than 100?

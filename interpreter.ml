@@ -213,7 +213,7 @@ let run (vars, funcs) =
 					| Double(d) -> string_of_float d
 					| Boolean(b) -> string_of_bool b
 					| Pitch(p) -> p
-					| Sound(p,d,a) -> p ^ ":" ^ string_of_float d ^ ":" ^ string_of_int a
+					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ "," ^ (build tl))
@@ -231,7 +231,7 @@ let run (vars, funcs) =
 				let file = "bytecode" in
 				let oc = open_out file in
 				let rec writeByteCode = function
-					Sound(p,d,a) -> "[" ^ p ^ "]:" ^ string_of_float d ^ ":" ^ string_of_int a
+					Sound(p,d,a) -> "[" ^ String.concat ", " p ^ "]:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (writeByteCode hd)
 							| hd :: tl -> ((writeByteCode hd) ^ "," ^ (build tl))

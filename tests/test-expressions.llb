@@ -9,7 +9,7 @@ void main()
 	a = a + b;
 	a = !a;
 	a = -a;
-	s = [A5, B1, G9]:3/8:100^;
+	s = |A5, B1, G9|:0.333:100^;
 	print(a || b);
 	print(a && b);
 	print(a == b);

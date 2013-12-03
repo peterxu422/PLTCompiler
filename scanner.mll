@@ -9,7 +9,7 @@ let comma_pitch = pitch(','| ", ")
 let comma_id = id(','| ", ")
 let pitches = pitch | comma_pitch*pitch
 let ids = id | comma_id*id
-let array_of_pitches = ['[']pitches[']']
+let array_of_pitches = ['|']pitches['|']
 let array_of_ids = ['[']ids[']']
 (*let sound = (array_of_pitches | id | array_of_ids)[':'](id | int_over_int)[':'](id | int_lit)*)
 
@@ -42,6 +42,7 @@ rule token = parse
 | '>'       { GT }
 | "<="      { LEQ }             
 | ">="      { GEQ }
+| '|'		{ PIPE }
 
 (*Types*)
 | "int[]"     { DATATYPE("intArr") }

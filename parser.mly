@@ -6,7 +6,7 @@ let parse_error s = (* Called by the parser function on error *)
 
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA COLON
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA COLON PIPE
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
 %token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG CARROT
 %token OR AND EQ NEQ LT GT LEQ GEQ
@@ -72,6 +72,8 @@ vdecl_list:
 vdecl: 
      DATATYPE ID SEMI { {varname = $2; vartype = $1} }
 
+
+
 /*
 arr_decl:
 	DATATYPE LBRACK RBRACK ID SEMI
@@ -96,7 +98,7 @@ expr:
 	  INT_LIT					  { Int($1) }
   | DOUBLE_LIT                    { Double($1) }
   | BOOLEAN_LIT                   { Boolean($1) }
-  | PITCH_LIT COLON DOUBLE_LIT COLON INT_LIT 	  { Sound($1, $3, $5) }
+  | PIPE pitch_list PIPE COLON DOUBLE_LIT COLON INT_LIT 	  { Sound($2, $5, $7) }
   | PITCH_LIT                     { Pitch($1) }
   | ID index_opt				  { Index($1, $2) }
   | ID								{ Id($1) }
@@ -121,6 +123,12 @@ expr:
 	| expr GEQ expr						{ Binop($1, Geq, $3) }
 	| LPAREN expr RPAREN				{ $2 }
 	
+
+pitch_list:
+	 PITCH_LIT { [$1] }
+	| pitch_list COMMA PITCH_LIT { $3 :: $1 }
+
+
 actuals_opt:
 	/*nothing*/ 	{ [] }
 	| actuals_list	{List.rev $1}
