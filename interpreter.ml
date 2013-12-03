@@ -286,9 +286,7 @@ let run (vars, funcs) =
 				| Expr(e) -> let _, env = eval env e in env
 				| If(e, s1, s2) ->
 				let v, env = eval env e in
-				print_endline (Ast.string_of_expr v);
-				print_endline (string_of_bool (Ast.string_of_expr v == "false"));
-				exec env (if (Ast.string_of_expr v) !=  "false" then s1 else s2)
+				exec env (if getBoolean v !=  false then s1 else s2)
 				| While(e, s) ->
 				let rec loop env =
 					let v, env = eval env e in
