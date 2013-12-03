@@ -254,6 +254,20 @@ let run (vars, funcs) =
 					
 					Int(0), env
 			(* for pitches and sounds *)
+			| Call("getAmplitude", [e]) ->
+				let v, env = eval env e in
+				(match v with
+					  Sound(p,d,a) -> Int(a), env
+					| _ -> raise (Failure ("getAmplitude can only be called on sounds"))
+				)
+			(* for sounds *)
+			| Call("getDuration", [e]) ->
+				let v, env = eval env e in
+				(match v with
+					  Sound(p,d,a) -> Double(d), env
+					| _ -> raise (Failure ("getDuration can only be called on sounds"))
+				)
+			(* for pitches and sounds *)
 			| Call("getPitch", [e]) ->
 				let v, env = eval env e in
 				(match v with

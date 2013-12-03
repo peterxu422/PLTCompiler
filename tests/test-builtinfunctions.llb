@@ -2,15 +2,28 @@ void main(){
 	int[] one;
 	int[] two;
 	int[] three;
+
 	sound a;
 	pitch b;
+	sound c;
+
 	a = A4:0.5:100;
 	b = B5;
+	c = C2:5.0:1;
+
 	one = [1];
 	two = [1, 2];
 	three = [1, 2, 3];
+
 	print(getPitch(a));
 	print(getPitch(b));
+
+	print(getDuration(a));
+	print(getDuration(c));
+
+	print(getAmplitude(a));
+	print(getAmplitude(c));
+	
 	print(length(one));
 	print(length(two));
 	print(length(three));
