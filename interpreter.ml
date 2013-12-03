@@ -290,13 +290,13 @@ let run (vars, funcs) =
 				| While(e, s) ->
 				let rec loop env =
 					let v, env = eval env e in
-					if v != Boolean(false) then loop (exec env s) else env
+					if getBoolean v != false then loop (exec env s) else env
 				in loop env
 				| For(e1, e2, e3, s) ->
 				let _, env = eval env e1 in
 				let rec loop env =
 					let v, env = eval env e2 in
-					if v != Boolean(false) then
+					if getBoolean v != false then
 					  let _, env = eval (exec env s) e3 in
 					  loop env
 					else
