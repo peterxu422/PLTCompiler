@@ -1,16 +1,15 @@
 void main() {
-	printInt(retIntLit());
-	printInt(retIntVar());
+	print(retIntLit());
+	print(retIntVar());
 	
-	printDbl(retDblLit());
-	printDbl(retDblVar());
+	print(retDblLit());
+	print(retDblVar());
 	
-	printPitch(retPitchLit());
-	printPitch(retPitchVar());
+	print(retPitchLit());
+	print(retPitchVar());
 	
-	printSound(retSoundLit());
-	printSound(retSoundVar());
-	return null;
+	print(retSoundLit());
+	print(retSoundVar());
 }
 
 int retIntLit() {
@@ -24,12 +23,12 @@ int retIntVar() {
 }
 
 double retDblLit() {
-	return 1.0;
+	return 1.5;
 }
 
 double retDblVar() {
 	double d;
-	d=1.0;
+	d=1.5;
 	return d;
 }
 
