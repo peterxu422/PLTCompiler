@@ -62,6 +62,7 @@ rule token = parse
 | "return"  { RETURN }
 | "if"		{ IF }
 | "else"	{ ELSE }
+| "for"		{ FOR }
 | "while"   { WHILE }  
 | "loop"	{ LOOP }
 

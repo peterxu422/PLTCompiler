@@ -325,7 +325,29 @@ let run (vars, funcs) =
 
 			(* executes statements, calls evals on expressions *)
 			let rec exec env = function
+			Block(stmts) -> List.fold_left exec env stmts
 				| Expr(e) -> let _, env = eval env e in env
+				| If(e, s1, s2) ->
+				let v, env = eval env e in
+				exec env (if getBoolean v !=  false then s1 else s2)
+				| While(e, s) ->
+				let rec loop env =
+					let v, env = eval env e in
+					if getBoolean v != false then loop (exec env s) else env
+				in loop env
+				| For(e1, e2, e3, s) ->
+				let _, env = eval env e1 in
+				let rec loop env =
+					let v, env = eval env e2 in
+					if getBoolean v != false then
+					  let _, env = eval (exec env s) e3 in
+					  loop env
+					else
+						env
+				in loop env
+				| Return(e) ->
+				let v, (locals, globals) = eval env e in
+				raise (ReturnException(v, globals))
 			in  
 
 			(* Enter the function: bind actual values to formal arguments *)
