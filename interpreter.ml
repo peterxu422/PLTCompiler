@@ -11,6 +11,7 @@ let getType v =
 		Int(v) -> "int"
 		| Double(v) -> "double"
 		| Boolean(v) -> "bool"
+		| _ -> "unmatched_type"
 
 let getInt v = 
 	match v with
@@ -97,12 +98,13 @@ let run (vars, funcs) =
 							if idx < (List.length exprs) then
 								let arr = (Array.of_list exprs) in arr.(idx) <- v; Array.to_list arr
 							else
+
 								(* TODO: have this init with the initType of the array *)
 								let arr = 
 								(Array.append 
 									(Array.of_list exprs) 
 									(Array.make (1+idx-(List.length exprs)) 
-										(initType "int"))) 
+										(initType (getType (v))))) 
 								in 
 									arr.(idx) <- v; Array.to_list arr
 						in
