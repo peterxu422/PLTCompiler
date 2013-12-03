@@ -97,7 +97,14 @@ let run (vars, funcs) =
 							if idx < (List.length exprs) then
 								let arr = (Array.of_list exprs) in arr.(idx) <- v; Array.to_list arr
 							else
-								raise (Failure ("Invalid index " ^ string_of_int idx ^ " for array " ^ name))
+								(* TODO: have this init with the initType of the array *)
+								let arr = 
+								(Array.append 
+									(Array.of_list exprs) 
+									(Array.make (1+idx-(List.length exprs)) 
+										(initType "int"))) 
+								in 
+									arr.(idx) <- v; Array.to_list arr
 						in
 					if NameMap.mem name locals then
 						let exprList = (match (NameMap.find name locals) with
