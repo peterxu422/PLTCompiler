@@ -7,7 +7,7 @@ type expr =
 	| Double of float
 	| Boolean of bool
 	| Pitch of string
-	| Sound of string * float * int
+	| Sound of string list * float * int
 	| Id of string
 	| Array of expr list
 	| Index of string * expr list
@@ -51,7 +51,7 @@ let rec string_of_expr = function
 	| Double(d) -> string_of_float d
 	| Boolean(b) -> string_of_bool b
 	| Pitch(p) -> p
-	| Sound(p,d,a) -> p ^ ":" ^ string_of_float d ^ ":" ^ string_of_int a 
+	| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|" ^ ":" ^ string_of_float d ^ ":" ^ string_of_int a 
 	| Id(s) -> s
 	| Array(s) ->
 		"[" ^ String.concat ", " (List.map string_of_expr s) ^ "]"

@@ -1,4 +1,4 @@
-function void main() {
+void main() {
 	int i;
 	double d;
 	pitch p;
@@ -8,15 +8,13 @@ function void main() {
 	i = 1;
 	d = 1.0;
 	p = A5;
-	s1 = A5:1/4:100;
+	s1 = |A5|:0.25:100;
 	s1 = s2;
-	
-	//Use print_int, print_dbl, printPitch?
 	
 	print(i);
 	print(d);
 	print(p);
-	printSound(s1);
-	printSound(s2);
+	print(s1);
+	print(s2);
 	
 }

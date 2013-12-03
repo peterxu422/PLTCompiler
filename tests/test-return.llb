@@ -44,11 +44,11 @@ pitch retPitchVar() {
 }
 
 sound retSoundLit() {
-	return A5:1/4:100;
+	return |A5|:0.25:100;
 }
 
 sound retSoundVar() {
 	sound s;
-	s = A5:1/4:100;
+	s = |A5|:0.25:100;
 	return s;
 }

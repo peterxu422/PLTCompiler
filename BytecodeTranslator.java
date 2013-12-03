@@ -48,8 +48,16 @@ public class BytecodeTranslator {
 						amp = chordsDurAmp[2];
 					}
 
-					String[] rat = chordsDurAmp[1].split("/");
-        			double durr = Double.parseDouble(rat[0]) / Double.parseDouble(rat[1]);
+					// changed this so that it supports doubles inside of the sound too
+					double durr;
+					if (chordsDurAmp[1].indexOf(".") == -1){
+						System.out.println("no /");
+						String[] rat = chordsDurAmp[1].split("/");
+        				durr = Double.parseDouble(rat[0]) / Double.parseDouble(rat[1]);
+					} else {
+        				durr = Double.parseDouble(chordsDurAmp[1]);	
+					}
+					
 
 					String[] chords = chordsDurAmp[0].split(" ");
 					for(int l=0;l<chords.length-1;l++){
