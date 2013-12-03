@@ -10,7 +10,7 @@ let parse_error s = (* Called by the parser function on error *)
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
 %token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG CARROT
 %token OR AND EQ NEQ LT GT LEQ GEQ
-%token RETURN IF ELSE WHILE LOOP
+%token RETURN IF ELSE FOR WHILE LOOP
 
 %token <string> ID
 %token <int> INT_LIT
@@ -24,7 +24,7 @@ let parse_error s = (* Called by the parser function on error *)
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
-%left	OR
+%left OR
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ
@@ -89,6 +89,8 @@ stmt:
 	| LBRACE stmt_list RBRACE { Block(List.rev $2) }
 	| IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
 	| IF LPAREN expr RPAREN stmt ELSE stmt	  { If($3, $5, $7) }
+	| FOR LPAREN expr SEMI expr SEMI expr RPAREN stmt
+    	{ For($3, $5, $7, $9) }
 	| WHILE LPAREN expr RPAREN stmt			  { While($3, $5) }
 	| LOOP LPAREN expr RPAREN stmt			  { Loop($3, $5) }
 	

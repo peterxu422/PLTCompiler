@@ -1,33 +1,54 @@
-void main() {
-        int i;
-        boolean b;
-        b = false;
-        
-        i=0;
-        if(3<2) {
-                i = 4;
-        }
-        print(i);
-        
-        if(3>2) {
-                i = 5;
-        }
-        print(i);
-        
-        if(true) {
-                i = 1;
-        }
-        else {
-                i = 2;
-        }
-        print(i);
-        
-        if(false) {
-                i = 1;
-        }
-        else {
-                i = 2;
-        }
-        print(i);
-        
+/*
+ * Primary Author: Nathan Hayes-Roth
+ * ---------------------------------
+ * Tesing IF statements.
+ */
+
+void main(){
+
+    /*
+     * Test Case:       if(true){}
+     *
+     * Result:          1
+     */
+
+    if (true) {
+        print(1);
+    }
+    
+    /*
+     * Test Case:       if(false){}
+     *
+     * Result:          
+     */
+
+    if (false) {
+        print(2);
+    }
+
+    /*
+     * Test Case:       if(true){} else{}
+     *
+     * Result:          3
+     */
+
+    if (true) {
+        print(3);
+    }
+    else {
+        print(4);
+    }
+
+    /*
+     * Test Case:       if(false){} else{}
+     *
+     * Result:          6
+     */
+
+    if (false) {
+        print(5);
+    }
+    else {
+        print(6);
+    }
 }
