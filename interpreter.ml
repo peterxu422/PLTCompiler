@@ -11,6 +11,7 @@ let getType v =
 		Int(v) -> "int"
 		| Double(v) -> "double"
 		| Boolean(v) -> "bool"
+		| _ -> "unmatched_type"
 
 let getInt v = 
 	match v with
@@ -52,7 +53,7 @@ let run (vars, funcs) =
 			| Double(d) -> Double(d), env
 			| Boolean(b) -> Boolean(b), env
 			| Pitch(p) -> Pitch(p), env
-			| Sound(s) -> Sound(s), env
+			| Sound(p,d,a) -> Sound(p,d,a), env
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
 				let rec lookup arr indices =
 					let arr = match arr with
@@ -61,7 +62,10 @@ let run (vars, funcs) =
 					in
 					match indices with
 					[] -> raise (Failure ("Error indexing array without indices"))
-					| Int(i) :: [] -> List.nth arr i, env
+					| Int(i) :: [] -> 
+					try
+						List.nth arr i, env
+					with Failure("nth") -> raise (Failure "Index out of bounds")
 					| _ -> raise (Failure "Invalid index")
 				in
 				lookup v i
@@ -86,10 +90,15 @@ let run (vars, funcs) =
 					v, (locals, NameMap.add name v globals)
 				else raise (Failure ("undeclared identifier " ^ name))
 				| Index(name, indices) -> 
-					let rec getIndex = function
-						Int(i) -> i
-						(*| Id(i) -> let idx, v = eval env (Id(i)) in getIndex idx*) (*Need to call getIndexFromVar again because function needs to return only 1 value*)
-						| _ -> raise (Failure ("Illegal index"))
+					let rec getIndex e = 
+						let v, env = eval env e in 
+						(match v with
+							Int(i) -> i
+							(*| Id(i) -> let idx, v = eval env (Id(i)) in getIndex idx*) (*Need to call getIndexFromVar again because function needs to return only 1 value*)
+							| e ->
+								print_endline (string_of_expr e);
+							 	raise (Failure ("Illegal index"))
+					)
 					in
 					let rec setElt exprs = function
 						[] -> raise (Failure ("Cannot assign to empty array"))
@@ -97,7 +106,15 @@ let run (vars, funcs) =
 							if idx < (List.length exprs) then
 								let arr = (Array.of_list exprs) in arr.(idx) <- v; Array.to_list arr
 							else
-								raise (Failure ("Invalid index " ^ string_of_int idx ^ " for array " ^ name))
+
+								(* TODO: have this init with the initType of the array *)
+								let arr = 
+								(Array.append 
+									(Array.of_list exprs) 
+									(Array.make (1+idx-(List.length exprs)) 
+										(initType (getType (v))))) 
+								in 
+									arr.(idx) <- v; Array.to_list arr
 						in
 					if NameMap.mem name locals then
 						let exprList = (match (NameMap.find name locals) with
@@ -245,10 +262,10 @@ let run (vars, funcs) =
 					| Double(d) -> string_of_float d
 					| Boolean(b) -> string_of_bool b
 					| Pitch(p) -> p
-					| Sound(s) -> s
+					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
-							| hd :: tl -> ((print hd) ^ "," ^ (build tl))
+							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
 					| _ -> raise (Failure ("Item cannot be printed"))
 				in
 					print_endline (print v);
@@ -258,20 +275,12 @@ let run (vars, funcs) =
 					print_endline (Ast.string_of_expr v);
 					Boolean(false), env *)
 
-			(* this does function calls. currently doesn't eval arguments,
-			   update variables, etc. It just sets fdecl, then we define a 
-			   function called exec that executes statements. Then, we go 
-			   through all the statements in the function definition and
-			   call exec on them, which pattern matches below. We hit the
-			   print() function, which gets evaled in the Expr match, which
-			   hits the Call("print", [e]) match  
-			*)
 			| Call ("mixdown", [e]) ->
 				let v, env = eval env e in
 				let file = "bytecode" in
 				let oc = open_out file in
 				let rec writeByteCode = function
-					Sound(s) -> s
+					Sound(p,d,a) -> "[" ^ String.concat ", " p ^ "]:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (writeByteCode hd)
 							| hd :: tl -> ((writeByteCode hd) ^ "," ^ (build tl))
@@ -293,7 +302,41 @@ let run (vars, funcs) =
 					(*  *)
 					
 					Int(0), env
-
+			(* for pitches and sounds *)
+			| Call("getAmplitude", [e]) ->
+				let v, env = eval env e in
+				(match v with
+					  Sound(p,d,a) -> Int(a), env
+					| _ -> raise (Failure ("getAmplitude can only be called on sounds"))
+				)
+			(* for sounds *)
+			| Call("getDuration", [e]) ->
+				let v, env = eval env e in
+				(match v with
+					  Sound(p,d,a) -> Double(d), env
+					| _ -> raise (Failure ("getDuration can only be called on sounds"))
+				)
+			(* for pitches and sounds *)
+			| Call("getPitch", [e]) ->
+				let v, env = eval env e in
+				(match v with
+					  Sound(p,d,a) -> 
+					  let rec strings_to_pitches = function
+					  		  hd :: [] -> [Pitch(hd)]
+					  		| hd :: tl -> [Pitch(hd)] @ strings_to_pitches tl
+					  in
+					  Array(List.rev(strings_to_pitches p)), env
+					| Pitch(p) -> Pitch(p), env
+					| _ -> raise (Failure ("getPitch can only be called on sounds or pitches"))
+				)
+			(* for arrays eyes only *)
+			| Call("length",[e]) -> 
+				let v, env = eval env e in
+				(match v with
+					  Array(a) -> Int(List.length a), env
+					| _ -> raise (Failure ("Length can only be called on arrays"))
+				)
+			(* this does function calls. *)
 			| Call(f, actuals) -> 
 				let fdecl =
 				  try NameMap.find f func_decls
@@ -314,7 +357,29 @@ let run (vars, funcs) =
 
 			(* executes statements, calls evals on expressions *)
 			let rec exec env = function
+			Block(stmts) -> List.fold_left exec env stmts
 				| Expr(e) -> let _, env = eval env e in env
+				| If(e, s1, s2) ->
+				let v, env = eval env e in
+				exec env (if getBoolean v !=  false then s1 else s2)
+				| While(e, s) ->
+				let rec loop env =
+					let v, env = eval env e in
+					if getBoolean v != false then loop (exec env s) else env
+				in loop env
+				| For(e1, e2, e3, s) ->
+				let _, env = eval env e1 in
+				let rec loop env =
+					let v, env = eval env e2 in
+					if getBoolean v != false then
+					  let _, env = eval (exec env s) e3 in
+					  loop env
+					else
+						env
+				in loop env
+				| Return(e) ->
+				let v, (locals, globals) = eval env e in
+				raise (ReturnException(v, globals))
 			in  
 
 			(* Enter the function: bind actual values to formal arguments *)

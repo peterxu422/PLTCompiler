@@ -19,8 +19,8 @@ void main() {
 	b_loc = false;
 	p_glob = A1;
 	p_loc = A2;
-	s_glob = A1:1/4:100;
-	s_loc = A2:1/8:50;
+	s_glob = |A1|:0.25:100;
+	s_loc = |A2|:0.125:50;
 	
 	//Globals
 	print(i_glob);

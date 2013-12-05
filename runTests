@@ -88,7 +88,7 @@ Dir['tests/*.out'].each do |filePath|
 		puts expected_output if dump_flag == false
 		puts expected_output.dump if dump_flag == true
 	else 
-		puts "\e[31m" + test_name + " failed. It could be a whitespace issue! Run with -d to see whitespace"
+		puts "\e[31m" + test_name + " failed. \nIt could be a whitespace issue! Run with -d to see whitespace"
 		puts "\e[37m---Expected_output: \n" + expected_output if dump_flag == false
 		puts "\e[31m---Actual output: \n" + actual_output if dump_flag == false
 		puts "\e[37m---Expected_output: \n" + expected_output.dump if dump_flag == true
