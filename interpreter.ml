@@ -114,7 +114,8 @@ let run (vars, funcs) =
 					else
 						raise (Failure (name ^ " was not properly initialized as an array"))
 			| _ -> raise (Failure ("Can only assign variables or array indices")))
-			
+
+			(* binop operators *)
 			| Binop(e1, op, e2) ->
 				let v1, env = eval env e1 in
 				let v2, env = eval env e2 in
@@ -123,42 +124,50 @@ let run (vars, funcs) =
 
 				if v1Type = v2Type then
 					(match op with
+						(* v1 + v2 *)
 						Add -> 
 							if v1Type = "int" then
 								Int (getInt v1 + getInt v2)
 							else if v1Type = "double" then
 								Double (getDouble v1 +. getDouble v2)
 							else raise (Failure (v1Type ^ " has no + operator"))
+						(* v1 - v2 *)
 						| Sub -> 
 							if v1Type = "int" then
 								Int (getInt v1 - getInt v2)
 							else if v1Type = "double" then
 								Double (getDouble v1 -. getDouble v2)
 							else raise (Failure (v1Type ^ " has no - operator"))
+						(* v1 * v2 *)
 						| Mult ->
 							if v1Type = "int" then
 								Int (getInt v1 * getInt v2)
 							else if v1Type = "double" then
 								Double (getDouble v1 *. getDouble v2)
 							else raise (Failure (v1Type ^ " has no * operator"))
+						(* v1 / v2 *)
 						| Div ->
 							if v1Type = "int" then
 								Int (getInt v1 / getInt v2)
 							else if v1Type = "double" then
 								Double (getDouble v1 /. getDouble v2)
 							else raise (Failure (v1Type ^ " has no / operator"))
+						(* v1 % v2 *)
 						| Mod ->
 							if v1Type = "int" then
 								Int (getInt v1 mod getInt v2)
 							else raise (Failure (v1Type ^ " has no % operator"))
+						(* v1 || v2 *)
 						| Or -> 
 							if v1Type = "bool" then
 								Boolean (getBoolean v1 || getBoolean v2)
 							else raise (Failure (v1Type ^ " has no || operator"))
+						(* v1 && v2 *)
 						| And -> 
 							if v1Type = "bool" then
 								Boolean (getBoolean v1 && getBoolean v2)
 							else raise (Failure (v1Type ^ " has no && operator"))
+						(* v1 == v2 *)
 						| Eq -> 
 							if v1Type = "int" then
 								Boolean (getInt v1 = getInt v2)
@@ -167,6 +176,7 @@ let run (vars, funcs) =
 							else if v1Type = "bool" then
 								Boolean (getBoolean v1 = getBoolean v2)
 							else raise (Failure (v1Type ^ " has no == operator"))
+						(* v1 != v2 *)
 						| Neq -> 
 							if v1Type = "int" then
 								Boolean (getInt v1 <> getInt v2)
@@ -175,24 +185,28 @@ let run (vars, funcs) =
 							else if v1Type = "bool" then
 								Boolean (getBoolean v1 <> getBoolean v2)
 							else raise (Failure (v1Type ^ " has no != operator"))
+						(* v1 < v2 *)
 						| Lt ->
 							if v1Type = "int" then
 								Boolean (getInt v1 < getInt v2)
 							else if v1Type = "double" then
 								Boolean (getDouble v1 < getDouble v2)
 							else raise (Failure (v1Type ^ " has no < operator"))
+						(* v1 > v2 *)
 						| Gt ->
 							if v1Type = "int" then
 								Boolean (getInt v1 > getInt v2)
 							else if v1Type = "double" then
 								Boolean (getDouble v1 > getDouble v2)
 							else raise (Failure (v1Type ^ " has no > operator"))
+						(* v1 <= v2 *)
 						| Leq ->
 							if v1Type = "int" then
 								Boolean (getInt v1 <= getInt v2)
 							else if v1Type = "double" then
 								Boolean (getDouble v1 <= getDouble v2)
 							else raise (Failure (v1Type ^ " has no <= operator"))
+						(* v1 >= v2 *)
 						| Geq ->
 							if v1Type = "int" then
 								Boolean (getInt v1 >= getInt v2)
@@ -201,6 +215,24 @@ let run (vars, funcs) =
 							else raise (Failure (v1Type ^ " has no * operator"))
 						), env
 				else raise (Failure ("Types " ^ v1Type ^ " and " ^ v2Type ^ " do not match"))
+
+				(* !e *)
+				| Not(e) ->
+					let v, env = eval env e in
+					let vType = getType v in
+					if vType = "bool" then
+						Boolean (not (getBoolean v)), env
+					else raise (Failure (vType ^ " has no ! operator"))
+
+				(* -e *)
+				| Neg(e) ->
+					let v, env = eval env e in
+					let vType = getType v in
+					if vType = "int" then
+						Int (0 - getInt v), env
+					else if vType = "double" then
+						Double (0. -. getDouble v), env
+					else raise (Failure (vType ^ " has no - operator"))
 
 			(* Arrays *)
 			| Array(e) -> Array(e), env

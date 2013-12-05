@@ -108,8 +108,8 @@ expr:
 	| expr TIMES	expr				{ Binop($1, Mult, $3) }
 	| expr DIVIDE expr					{ Binop($1, Div, $3) }
 	| expr PERCENT expr					{ Binop($1, Mod, $3) }
-	| NOT expr							{ Unop(Not, $2) }
-	| MINUS expr						{ Unop(Neg, $2) }
+	| NOT expr							{ Not($2) }
+	| MINUS expr						{ Neg($2) }
 	| expr CARROT						{ Tie($1) }
 	| expr OR expr						{ Binop($1, Or, $3) }
 	| expr AND expr						{ Binop($1, And, $3) }
