@@ -1,5 +1,6 @@
 open Ast 
 open Printf
+open Helper
 
 module NameMap = Map.Make(struct
 	type t = string
@@ -11,6 +12,7 @@ let getType v =
 		Int(v) -> "int"
 		| Double(v) -> "double"
 		| Boolean(v) -> "bool"
+		| Pitch(v) -> "pitch"
 		| _ -> "unmatched_type"
 
 let getInt v = 
@@ -27,6 +29,11 @@ let getBoolean v =
 	match v with
 		Boolean(v) -> v
 		| _ -> false
+
+let getPitch v =
+	match v with
+		Pitch(v) -> v
+		| _ -> "C0"
 
 exception ReturnException of expr * expr NameMap.t
 
@@ -138,161 +145,267 @@ let run (vars, funcs) =
 				let v2, env = eval env e2 in
 				let v1Type = getType v1 in
 				let v2Type = getType v2 in
-
-				if v1Type = v2Type || (v1Type = "int" && v2Type = "double")
-				|| (v1Type = "double" && v2Type = "int") then
-					(match op with
-						(* v1 + v2 *)
-						Add -> 
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Double ((float_of_int (getInt v1)) +. getDouble v2)
-								else
-									Int (getInt v1 + getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Double (getDouble v1 +. (float_of_int (getInt v2)))
-								else
-									Double (getDouble v1 +. getDouble v2))
-							else raise (Failure (v1Type ^ " has no + operator"))
-						(* v1 - v2 *)
-						| Sub -> 
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Double ((float_of_int (getInt v1)) -. getDouble v2)
-								else
-									Int (getInt v1 - getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Double (getDouble v1 -. (float_of_int (getInt v2)))
-								else
-									Double (getDouble v1 -. getDouble v2))
-							else raise (Failure (v1Type ^ " has no - operator"))
-						(* v1 * v2 *)
-						| Mult ->
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Double ((float_of_int (getInt v1)) *. getDouble v2)
-								else
-									Int (getInt v1 * getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Double (getDouble v1 *. (float_of_int (getInt v2)))
-								else
-									Double (getDouble v1 *. getDouble v2))
-							else raise (Failure (v1Type ^ " has no * operator"))
-						(* v1 / v2 *)
-						| Div ->
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Double ((float_of_int (getInt v1)) /. getDouble v2)
-								else
-									Int (getInt v1 / getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Double (getDouble v1 /. (float_of_int (getInt v2)))
-								else
-									Double (getDouble v1 /. getDouble v2))
-							else raise (Failure (v1Type ^ " has no / operator"))
-						(* v1 % v2 *)
-						| Mod ->
-							if v1Type = "int" then
+				(match op with
+					(* v1 + v2 *)
+					Add -> 
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Double ((float_of_int (getInt v1)) +. getDouble v2)
+							else if v2Type = "pitch" then
+								Pitch (intToPitch(getInt v1 + pitchToInt (getPitch v2)))
+							else if v2Type = "int" then
+								Int (getInt v1 + getInt v2)
+							else raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Double (getDouble v1 +. (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Double (getDouble v1 +. getDouble v2)
+							else raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "int" then
+								Pitch (intToPitch(pitchToInt (getPitch v1) + getInt v2))
+							else raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+						else raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation"))
+					(* v1 - v2 *)
+					| Sub -> 
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Double ((float_of_int (getInt v1)) -. getDouble v2)
+							else if v2Type = "pitch" then
+								Pitch (intToPitch(getInt v1 - pitchToInt (getPitch v2)))
+							else if v2Type = "int" then
+								Int (getInt v1 - getInt v2)
+							else raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Double (getDouble v1 -. (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Double (getDouble v1 -. getDouble v2)
+							else raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "int" then
+								Pitch (intToPitch(pitchToInt (getPitch v1) - getInt v2))
+							else raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
+						else raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation"))
+					(* v1 * v2 *)
+					| Mult ->
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Double ((float_of_int (getInt v1)) *. getDouble v2)
+							else if v2Type = "pitch" then
+								Pitch (intToPitch(getInt v1 * pitchToInt (getPitch v2)))
+							else if v2Type = "int" then
+								Int (getInt v1 * getInt v2)
+							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Double (getDouble v1 *. (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Double (getDouble v1 *. getDouble v2)
+							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "int" then
+								Pitch (intToPitch(pitchToInt (getPitch v1) * getInt v2))
+							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation"))
+					(* v1 / v2 *)
+					| Div ->
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Double ((float_of_int (getInt v1)) /. getDouble v2)
+							else if v2Type = "pitch" then
+								Pitch (intToPitch(getInt v1 / pitchToInt (getPitch v2)))
+							else if v2Type = "int" then
+								Int (getInt v1 / getInt v2)
+							else raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Double (getDouble v1 /. (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Double (getDouble v1 /. getDouble v2)
+							else raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "int" then
+								Pitch (intToPitch(pitchToInt (getPitch v1) / getInt v2))
+							else raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
+						else raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation"))
+					(* v1 % v2 *)
+					| Mod ->
+						if v1Type = "int" then
+							(if v2Type = "int" then
 								Int (getInt v1 mod getInt v2)
-							else raise (Failure (v1Type ^ " has no % operator"))
-						(* v1 || v2 *)
-						| Or -> 
-							if v1Type = "bool" then
-								Boolean (getBoolean v1 || getBoolean v2)
-							else raise (Failure (v1Type ^ " has no || operator"))
-						(* v1 && v2 *)
-						| And -> 
-							if v1Type = "bool" then
-								Boolean (getBoolean v1 && getBoolean v2)
-							else raise (Failure (v1Type ^ " has no && operator"))
-						(* v1 == v2 *)
-						| Eq -> 
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Boolean ((float_of_int (getInt v1)) = getDouble v2)
-								else
-									Boolean (getInt v1 = getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Boolean (getDouble v1 = (float_of_int (getInt v2)))
-								else
-									Boolean (getDouble v1 = getDouble v2))
-							else if v1Type = "bool" then
-								Boolean (getBoolean v1 = getBoolean v2)
-							else raise (Failure (v1Type ^ " has no == operator"))
-						(* v1 != v2 *)
-						| Neq -> 
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Boolean ((float_of_int (getInt v1)) <> getDouble v2)
-								else
-									Boolean (getInt v1 <> getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Boolean (getDouble v1 <> (float_of_int (getInt v2)))
-								else
-									Boolean (getDouble v1 <> getDouble v2))
-							else if v1Type = "bool" then
-								Boolean (getBoolean v1 <> getBoolean v2)
-							else raise (Failure (v1Type ^ " has no != operator"))
-						(* v1 < v2 *)
-						| Lt ->
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Boolean ((float_of_int (getInt v1)) < getDouble v2)
-								else
-									Boolean (getInt v1 < getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Boolean (getDouble v1 < (float_of_int (getInt v2)))
-								else
-									Boolean (getDouble v1 < getDouble v2))
-							else raise (Failure (v1Type ^ " has no < operator"))
-						(* v1 > v2 *)
-						| Gt ->
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Boolean ((float_of_int (getInt v1)) > getDouble v2)
-								else
-									Boolean (getInt v1 > getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Boolean (getDouble v1 > (float_of_int (getInt v2)))
-								else
-									Boolean (getDouble v1 > getDouble v2))
-							else raise (Failure (v1Type ^ " has no > operator"))
-						(* v1 <= v2 *)
-						| Leq ->
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Boolean ((float_of_int (getInt v1)) <= getDouble v2)
-								else
-									Boolean (getInt v1 <= getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Boolean (getDouble v1 <= (float_of_int (getInt v2)))
-								else
-									Boolean (getDouble v1 <= getDouble v2))
-							else raise (Failure (v1Type ^ " has no <= operator"))
-						(* v1 >= v2 *)
-						| Geq ->
-							if v1Type = "int" then
-								(if v2Type = "double" then
-									Boolean ((float_of_int (getInt v1)) >= getDouble v2)
-								else
-									Boolean (getInt v1 >= getInt v2))
-							else if v1Type = "double" then
-								(if v2Type = "int" then
-									Boolean (getDouble v1 >= (float_of_int (getInt v2)))
-								else
-									Boolean (getDouble v1 >= getDouble v2))
-							else raise (Failure (v1Type ^ " has no * operator"))
-						), env
-				else raise (Failure ("Types " ^ v1Type ^ " and " ^ v2Type ^ " do not match"))
+							else if v2Type = "pitch" then
+								Pitch (intToPitch(getInt v1 mod pitchToInt (getPitch v2)))
+							else raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "int" then
+								Pitch (intToPitch(pitchToInt (getPitch v1) mod getInt v2))
+							else raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
+						else raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation"))
+					(* v1 || v2 *)
+					| Or -> 
+						if v1Type = "bool" && v2Type = "bool" then
+							Boolean (getBoolean v1 || getBoolean v2)
+						else raise (Failure (v1Type ^ " || " ^ v2Type ^ " is not a valid operation"))
+					(* v1 && v2 *)
+					| And -> 
+						if v1Type = "bool" && v2Type = "bool" then
+							Boolean (getBoolean v1 && getBoolean v2)
+						else raise (Failure (v1Type ^ " && " ^ v2Type ^ " is not a valid operation"))
+					(* v1 == v2 *)
+					| Eq -> 
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Boolean ((float_of_int (getInt v1)) = getDouble v2)
+							else if v2Type = "pitch" then
+								Boolean (getInt v1 = pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (getInt v1 = getInt v2)
+							else raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Boolean (getDouble v1 = (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Boolean (getDouble v1 = getDouble v2)
+							else raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "pitch" then
+								Boolean (pitchToInt (getPitch v1) = pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (pitchToInt (getPitch v1) = getInt v2)
+							else raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "bool" && v2Type = "bool" then
+							Boolean (getBoolean v1 = getBoolean v2)
+						else raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation"))
+					(* v1 != v2 *)
+					| Neq -> 
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Boolean ((float_of_int (getInt v1)) <> getDouble v2)
+							else if v2Type = "pitch" then
+								Boolean (getInt v1 <> pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (getInt v1 <> getInt v2)
+							else raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Boolean (getDouble v1 <> (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Boolean (getDouble v1 <> getDouble v2)
+							else raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "pitch" then
+								Boolean (pitchToInt (getPitch v1) <> pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (pitchToInt (getPitch v1) <> getInt v2)
+							else raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "bool" && v2Type = "bool" then
+							Boolean (getBoolean v1 <> getBoolean v2)
+						else raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation"))
+					(* v1 < v2 *)
+					| Lt ->
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Boolean ((float_of_int (getInt v1)) < getDouble v2)
+							else if v2Type = "pitch" then
+								Boolean (getInt v1 < pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (getInt v1 < getInt v2)
+							else raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Boolean (getDouble v1 < (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Boolean (getDouble v1 < getDouble v2)
+							else raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "pitch" then
+								Boolean (pitchToInt (getPitch v1) < pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (pitchToInt (getPitch v1) < getInt v2)
+							else raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "bool" && v2Type = "bool" then
+							Boolean (getBoolean v1 < getBoolean v2)
+						else raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation"))
+					(* v1 > v2 *)
+					| Gt ->
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Boolean ((float_of_int (getInt v1)) > getDouble v2)
+							else if v2Type = "pitch" then
+								Boolean (getInt v1 > pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (getInt v1 > getInt v2)
+							else raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Boolean (getDouble v1 > (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Boolean (getDouble v1 > getDouble v2)
+							else raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "pitch" then
+								Boolean (pitchToInt (getPitch v1) > pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (pitchToInt (getPitch v1) > getInt v2)
+							else raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "bool" && v2Type = "bool" then
+							Boolean (getBoolean v1 > getBoolean v2)
+						else raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation"))
+					(* v1 <= v2 *)
+					| Leq ->
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Boolean ((float_of_int (getInt v1)) <= getDouble v2)
+							else if v2Type = "pitch" then
+								Boolean (getInt v1 <= pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (getInt v1 <= getInt v2)
+							else raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Boolean (getDouble v1 <= (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Boolean (getDouble v1 <= getDouble v2)
+							else raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "pitch" then
+								Boolean (pitchToInt (getPitch v1) <= pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (pitchToInt (getPitch v1) <= getInt v2)
+							else raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "bool" && v2Type = "bool" then
+							Boolean (getBoolean v1 <= getBoolean v2)
+						else raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation"))
+					(* v1 >= v2 *)
+					| Geq ->
+						if v1Type = "int" then
+							(if v2Type = "double" then
+								Boolean ((float_of_int (getInt v1)) >= getDouble v2)
+							else if v2Type = "pitch" then
+								Boolean (getInt v1 >= pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (getInt v1 >= getInt v2)
+							else raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "double" then
+							(if v2Type = "int" then
+								Boolean (getDouble v1 >= (float_of_int (getInt v2)))
+							else if v2Type = "double" then
+								Boolean (getDouble v1 >= getDouble v2)
+							else raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "pitch" then
+							(if v2Type = "pitch" then
+								Boolean (pitchToInt (getPitch v1) >= pitchToInt (getPitch v2))
+							else if v2Type = "int" then
+								Boolean (pitchToInt (getPitch v1) >= getInt v2)
+							else raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "bool" && v2Type = "bool" then
+							Boolean (getBoolean v1 >= getBoolean v2)
+						else raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation"))
+					), env
+
+				(* else raise (Failure ("Types " ^ v1Type ^ " and " ^ v2Type ^ " do not match")) *)
 
 				(* !e *)
 				| Not(e) ->
