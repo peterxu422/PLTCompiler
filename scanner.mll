@@ -2,7 +2,7 @@
 
 let pitch = (['A' - 'G']('#' | 'b')?['0' - '9'] | ['C' - 'G']('#' |'b')?"10")
 let int_lit = ['0'-'9']+
-let dbl_lit = ['0'-'9']+['.']['0' - '9']+
+let dbl_lit = ['0'-'9']+['.']['0' - '9']+ | ['0'-'9']+['.'] | ['.']['0' - '9']+
 let id = ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*
 let int_over_int = int_lit['/']int_lit
 let comma_pitch = pitch(','| ", ")

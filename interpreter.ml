@@ -139,35 +139,60 @@ let run (vars, funcs) =
 				let v1Type = getType v1 in
 				let v2Type = getType v2 in
 
-				if v1Type = v2Type then
+				if v1Type = v2Type || (v1Type = "int" && v2Type = "double")
+				|| (v1Type = "double" && v2Type = "int") then
 					(match op with
 						(* v1 + v2 *)
 						Add -> 
 							if v1Type = "int" then
-								Int (getInt v1 + getInt v2)
+								(if v2Type = "double" then
+									Double ((float_of_int (getInt v1)) +. getDouble v2)
+								else
+									Int (getInt v1 + getInt v2))
 							else if v1Type = "double" then
-								Double (getDouble v1 +. getDouble v2)
+								(if v2Type = "int" then
+									Double (getDouble v1 +. (float_of_int (getInt v2)))
+								else
+									Double (getDouble v1 +. getDouble v2))
 							else raise (Failure (v1Type ^ " has no + operator"))
 						(* v1 - v2 *)
 						| Sub -> 
 							if v1Type = "int" then
-								Int (getInt v1 - getInt v2)
+								(if v2Type = "double" then
+									Double ((float_of_int (getInt v1)) -. getDouble v2)
+								else
+									Int (getInt v1 - getInt v2))
 							else if v1Type = "double" then
-								Double (getDouble v1 -. getDouble v2)
+								(if v2Type = "int" then
+									Double (getDouble v1 -. (float_of_int (getInt v2)))
+								else
+									Double (getDouble v1 -. getDouble v2))
 							else raise (Failure (v1Type ^ " has no - operator"))
 						(* v1 * v2 *)
 						| Mult ->
 							if v1Type = "int" then
-								Int (getInt v1 * getInt v2)
+								(if v2Type = "double" then
+									Double ((float_of_int (getInt v1)) *. getDouble v2)
+								else
+									Int (getInt v1 * getInt v2))
 							else if v1Type = "double" then
-								Double (getDouble v1 *. getDouble v2)
+								(if v2Type = "int" then
+									Double (getDouble v1 *. (float_of_int (getInt v2)))
+								else
+									Double (getDouble v1 *. getDouble v2))
 							else raise (Failure (v1Type ^ " has no * operator"))
 						(* v1 / v2 *)
 						| Div ->
 							if v1Type = "int" then
-								Int (getInt v1 / getInt v2)
+								(if v2Type = "double" then
+									Double ((float_of_int (getInt v1)) /. getDouble v2)
+								else
+									Int (getInt v1 / getInt v2))
 							else if v1Type = "double" then
-								Double (getDouble v1 /. getDouble v2)
+								(if v2Type = "int" then
+									Double (getDouble v1 /. (float_of_int (getInt v2)))
+								else
+									Double (getDouble v1 /. getDouble v2))
 							else raise (Failure (v1Type ^ " has no / operator"))
 						(* v1 % v2 *)
 						| Mod ->
@@ -187,48 +212,84 @@ let run (vars, funcs) =
 						(* v1 == v2 *)
 						| Eq -> 
 							if v1Type = "int" then
-								Boolean (getInt v1 = getInt v2)
+								(if v2Type = "double" then
+									Boolean ((float_of_int (getInt v1)) = getDouble v2)
+								else
+									Boolean (getInt v1 = getInt v2))
 							else if v1Type = "double" then
-								Boolean (getDouble v1 = getDouble v2)
+								(if v2Type = "int" then
+									Boolean (getDouble v1 = (float_of_int (getInt v2)))
+								else
+									Boolean (getDouble v1 = getDouble v2))
 							else if v1Type = "bool" then
 								Boolean (getBoolean v1 = getBoolean v2)
 							else raise (Failure (v1Type ^ " has no == operator"))
 						(* v1 != v2 *)
 						| Neq -> 
 							if v1Type = "int" then
-								Boolean (getInt v1 <> getInt v2)
+								(if v2Type = "double" then
+									Boolean ((float_of_int (getInt v1)) <> getDouble v2)
+								else
+									Boolean (getInt v1 <> getInt v2))
 							else if v1Type = "double" then
-								Boolean (getDouble v1 <> getDouble v2)
+								(if v2Type = "int" then
+									Boolean (getDouble v1 <> (float_of_int (getInt v2)))
+								else
+									Boolean (getDouble v1 <> getDouble v2))
 							else if v1Type = "bool" then
 								Boolean (getBoolean v1 <> getBoolean v2)
 							else raise (Failure (v1Type ^ " has no != operator"))
 						(* v1 < v2 *)
 						| Lt ->
 							if v1Type = "int" then
-								Boolean (getInt v1 < getInt v2)
+								(if v2Type = "double" then
+									Boolean ((float_of_int (getInt v1)) < getDouble v2)
+								else
+									Boolean (getInt v1 < getInt v2))
 							else if v1Type = "double" then
-								Boolean (getDouble v1 < getDouble v2)
+								(if v2Type = "int" then
+									Boolean (getDouble v1 < (float_of_int (getInt v2)))
+								else
+									Boolean (getDouble v1 < getDouble v2))
 							else raise (Failure (v1Type ^ " has no < operator"))
 						(* v1 > v2 *)
 						| Gt ->
 							if v1Type = "int" then
-								Boolean (getInt v1 > getInt v2)
+								(if v2Type = "double" then
+									Boolean ((float_of_int (getInt v1)) > getDouble v2)
+								else
+									Boolean (getInt v1 > getInt v2))
 							else if v1Type = "double" then
-								Boolean (getDouble v1 > getDouble v2)
+								(if v2Type = "int" then
+									Boolean (getDouble v1 > (float_of_int (getInt v2)))
+								else
+									Boolean (getDouble v1 > getDouble v2))
 							else raise (Failure (v1Type ^ " has no > operator"))
 						(* v1 <= v2 *)
 						| Leq ->
 							if v1Type = "int" then
-								Boolean (getInt v1 <= getInt v2)
+								(if v2Type = "double" then
+									Boolean ((float_of_int (getInt v1)) <= getDouble v2)
+								else
+									Boolean (getInt v1 <= getInt v2))
 							else if v1Type = "double" then
-								Boolean (getDouble v1 <= getDouble v2)
+								(if v2Type = "int" then
+									Boolean (getDouble v1 <= (float_of_int (getInt v2)))
+								else
+									Boolean (getDouble v1 <= getDouble v2))
 							else raise (Failure (v1Type ^ " has no <= operator"))
 						(* v1 >= v2 *)
 						| Geq ->
 							if v1Type = "int" then
-								Boolean (getInt v1 >= getInt v2)
+								(if v2Type = "double" then
+									Boolean ((float_of_int (getInt v1)) >= getDouble v2)
+								else
+									Boolean (getInt v1 >= getInt v2))
 							else if v1Type = "double" then
-								Boolean (getDouble v1 >= getDouble v2)
+								(if v2Type = "int" then
+									Boolean (getDouble v1 >= (float_of_int (getInt v2)))
+								else
+									Boolean (getDouble v1 >= getDouble v2))
 							else raise (Failure (v1Type ^ " has no * operator"))
 						), env
 				else raise (Failure ("Types " ^ v1Type ^ " and " ^ v2Type ^ " do not match"))
