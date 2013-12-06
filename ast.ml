@@ -1,5 +1,4 @@
 type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | Neq | And | Or
-type unop = Neg | Not
 type typeConst = Integer | Double | Void | Pitch | Sound | Boolean
 
 type expr =
@@ -7,14 +6,15 @@ type expr =
 	| Double of float
 	| Boolean of bool
 	| Pitch of string
-	| Sound of string
+	| Sound of string list * float * int
 	| Id of string
 	| Array of expr list
 	| Index of string * expr list
 	| Call of string * expr list
 	| Assign of expr * expr
 	| Binop of expr * op * expr
-	| Unop of unop * expr
+	| Not of expr
+	| Neg of expr
 	| Tie of expr
 
 type stmt =
@@ -22,6 +22,7 @@ type stmt =
 	| Expr of expr
 	| Return of expr
 	| If of expr * stmt * stmt
+	| For of expr * expr * expr * stmt
 	| While of expr * stmt
 	| Loop of expr * stmt
 	
@@ -51,7 +52,7 @@ let rec string_of_expr = function
 	| Double(d) -> string_of_float d
 	| Boolean(b) -> string_of_bool b
 	| Pitch(p) -> p
-	| Sound(s) -> s
+	| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|" ^ ":" ^ string_of_float d ^ ":" ^ string_of_int a 
 	| Id(s) -> s
 	| Array(s) ->
 		"[" ^ String.concat ", " (List.map string_of_expr s) ^ "]"
@@ -77,11 +78,8 @@ let rec string_of_expr = function
 			| Leq		-> "<="
 			| Geq		-> ">="
 			) ^ " " ^ string_of_expr e2
-	| Unop(o, e) ->
-		(match o with
-			Not			-> "!"
-		|	Neg			-> "-")
-		^ string_of_expr e
+	| Not(e) -> "!" ^ (string_of_expr e)
+	| Neg(e) -> "-" ^ (string_of_expr e)
 	| Tie(e) -> (string_of_expr e) ^ "^"
 
 
@@ -93,6 +91,9 @@ let rec string_of_stmt = function
 	| If(e, s, Block([])) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
 	| If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^
 		string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
+	| For(e1, e2, e3, s) ->
+      "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
+      string_of_expr e3  ^ ") " ^ string_of_stmt s
 	| While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 	| Loop(e, s) -> "loop (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 	

@@ -1,19 +1,26 @@
+/*
+ * Primary Author: Nathan Hayes-Roth
+ * ---------------------------------
+ * Tesing WHILE statements.
+ */
+
 void main() {
-	int i;
-	boolean b;
-	
-	i = 0;
-	while(i < 5) {
-		print(i);
-		i = i + 1;
-	}
-	
-	b = true;
-	while(b) {
-		if(i == 100) {
-			b = false;
-		}
-		print(i);
-		i = i + 1;
-	}
+    int i;
+    boolean b;
+        
+    i = 0;
+    while(i < 5) {
+        print(i);
+        i = i + 1;
+    }
+    print(42);
+    
+    b = true;
+    while(b) {
+        if(i == 10) {
+            b = false;
+        }
+        print(i);
+        i = i + 1;
+    }
 }
