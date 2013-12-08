@@ -78,4 +78,8 @@ void main()
 	print(B1>B2);
 	print(E5<=E6);
 	print(E5>=E6);
+	print(4*|C5|:.25:100);
+	print(.5*|C2|:.5:100);
+	print(|C9, D4|:.5:100*2);
+	print(|D3, A5|:1.:100*.25);
 }

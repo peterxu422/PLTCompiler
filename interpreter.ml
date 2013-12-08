@@ -13,6 +13,7 @@ let getType v =
 		| Double(v) -> "double"
 		| Boolean(v) -> "bool"
 		| Pitch(v) -> "pitch"
+		| Sound(p,d,a) -> "sound"
 		| _ -> "unmatched_type"
 
 let getInt v = 
@@ -35,6 +36,11 @@ let getPitch v =
 		Pitch(v) -> v
 		| _ -> "C0"
 
+let getSound v =
+	match v with
+		Sound(p,d,a) -> (p,d,a)
+		| _ -> (["C0"], 0., 0)
+
 exception ReturnException of expr * expr NameMap.t
 
 let initType t = 
@@ -42,6 +48,8 @@ let initType t =
     "int" -> Int(0)
     | "double" -> Double(0.0)
     | "bool" -> Boolean(false)
+    | "pitch" -> Pitch("C0")
+    | "sound" -> Sound((["C0"], 0., 0))
     | _ -> Boolean(false)
 
 let run (vars, funcs) =
@@ -191,7 +199,17 @@ let run (vars, funcs) =
 					(* v1 * v2 *)
 					| Mult ->
 						if v1Type = "int" then
-							(if v2Type = "double" then
+(* 			| Call("getDuration", [e]) ->
+				let v, env = eval env e in
+				(match v with
+					  Sound(p,d,a) -> Double(d), env
+					| _ -> raise (Failure ("getDuration can only be called on sounds"))
+				) *)
+							(if v2Type = "sound" then
+								(match v2 with
+									Sound(p,d,a) -> Sound(p,float_of_int (getInt v1) *. d, a)
+									| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							else if v2Type = "double" then
 								Double ((float_of_int (getInt v1)) *. getDouble v2)
 							else if v2Type = "pitch" then
 								Pitch (intToPitch(getInt v1 * pitchToInt (getPitch v2)))
@@ -199,7 +217,11 @@ let run (vars, funcs) =
 								Int (getInt v1 * getInt v2)
 							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 						else if v1Type = "double" then
-							(if v2Type = "int" then
+							(if v2Type = "sound" then
+								(match v2 with
+									Sound(p,d,a) -> Sound(p,getDouble v1 *. d, a)
+									| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							else if v2Type = "int" then
 								Double (getDouble v1 *. (float_of_int (getInt v2)))
 							else if v2Type = "double" then
 								Double (getDouble v1 *. getDouble v2)
@@ -207,6 +229,16 @@ let run (vars, funcs) =
 						else if v1Type = "pitch" then
 							(if v2Type = "int" then
 								Pitch (intToPitch(pitchToInt (getPitch v1) * getInt v2))
+							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						else if v1Type = "sound" then
+							(if v2Type = "int" then
+								(match v1 with
+									Sound(p,d,a) -> Sound(p,d *. float_of_int (getInt v2),a)
+									| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							else if v2Type = "double" then
+								(match v1 with
+									Sound(p,d,a) -> Sound(p,d *. getDouble v2,a)
+									| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 						else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation"))
 					(* v1 / v2 *)
