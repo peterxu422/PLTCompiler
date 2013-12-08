@@ -199,12 +199,6 @@ let run (vars, funcs) =
 					(* v1 * v2 *)
 					| Mult ->
 						if v1Type = "int" then
-(* 			| Call("getDuration", [e]) ->
-				let v, env = eval env e in
-				(match v with
-					  Sound(p,d,a) -> Double(d), env
-					| _ -> raise (Failure ("getDuration can only be called on sounds"))
-				) *)
 							(if v2Type = "sound" then
 								(match v2 with
 									Sound(p,d,a) -> Sound(p,float_of_int (getInt v1) *. d, a)
