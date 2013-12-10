@@ -221,18 +221,15 @@ let run (vars, funcs) =
 							| _ -> raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
 						| _ -> raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
 					(* v1 % v2 *)
-					| Mod ->
-						if v1Type = "int" then
-							(if v2Type = "int" then
-								Int (getInt v1 mod getInt v2)
-							else if v2Type = "pitch" then
-								Pitch (intToPitch(getInt v1 mod pitchToInt (getPitch v2)))
-							else raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
-						else if v1Type = "pitch" then
-							(if v2Type = "int" then
-								Pitch (intToPitch(pitchToInt (getPitch v1) mod getInt v2))
-							else raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
-						else raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation"))
+					| Mod -> (match v1 with
+						Int(i1) -> (match v2 with
+							Int(i2) -> Int (i1 mod i2)
+							| Pitch(p2) -> Pitch (intToPitch(i1 mod pitchToInt p2))
+							| _ -> raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
+						| Pitch(p1) -> (match v2 with
+							Int(i2) -> Pitch (intToPitch(pitchToInt p1 mod i2))
+							| _ -> raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
+						| _ -> raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
 					(* v1 || v2 *)
 					| Or -> 
 						if v1Type = "bool" && v2Type = "bool" then
