@@ -155,26 +155,20 @@ let run (vars, funcs) =
 				let v2Type = getType v2 in
 				(match op with
 					(* v1 + v2 *)
-					Add -> 
-						if v1Type = "int" then
-							(if v2Type = "double" then
-								Double ((float_of_int (getInt v1)) +. getDouble v2)
-							else if v2Type = "pitch" then
-								Pitch (intToPitch(getInt v1 + pitchToInt (getPitch v2)))
-							else if v2Type = "int" then
-								Int (getInt v1 + getInt v2)
-							else raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
-						else if v1Type = "double" then
-							(if v2Type = "int" then
-								Double (getDouble v1 +. (float_of_int (getInt v2)))
-							else if v2Type = "double" then
-								Double (getDouble v1 +. getDouble v2)
-							else raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
-						else if v1Type = "pitch" then
-							(if v2Type = "int" then
-								Pitch (intToPitch(pitchToInt (getPitch v1) + getInt v2))
-							else raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
-						else raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation"))
+					Add -> (match v1 with
+						Int(i1) -> (match v2 with
+							Double(d2) -> Double (float_of_int i1 +. d2)
+							| Pitch(p2) -> Pitch (intToPitch(i1 + pitchToInt p2))
+							| Int(i2) -> Int (i1 + i2)
+							| _ -> raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+						| Double(d1) -> (match v2 with
+							Int(i2) -> Double (d1 +. (float_of_int i2))
+							| Double(d2) -> Double (d1 +. d2)
+							| _ -> raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+						| Pitch(p1) -> (match v2 with
+							Int(i2) -> Pitch (intToPitch(pitchToInt p1 + i2))
+							| _ -> raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+						| _ -> raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
 					(* v1 - v2 *)
 					| Sub -> 
 						if v1Type = "int" then
@@ -197,44 +191,26 @@ let run (vars, funcs) =
 							else raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 						else raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation"))
 					(* v1 * v2 *)
-					| Mult ->
-						if v1Type = "int" then
-							(if v2Type = "sound" then
-								(match v2 with
-									Sound(p,d,a) -> Sound(p,float_of_int (getInt v1) *. d, a)
-									| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							else if v2Type = "double" then
-								Double ((float_of_int (getInt v1)) *. getDouble v2)
-							else if v2Type = "pitch" then
-								Pitch (intToPitch(getInt v1 * pitchToInt (getPitch v2)))
-							else if v2Type = "int" then
-								Int (getInt v1 * getInt v2)
-							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						else if v1Type = "double" then
-							(if v2Type = "sound" then
-								(match v2 with
-									Sound(p,d,a) -> Sound(p,getDouble v1 *. d, a)
-									| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							else if v2Type = "int" then
-								Double (getDouble v1 *. (float_of_int (getInt v2)))
-							else if v2Type = "double" then
-								Double (getDouble v1 *. getDouble v2)
-							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						else if v1Type = "pitch" then
-							(if v2Type = "int" then
-								Pitch (intToPitch(pitchToInt (getPitch v1) * getInt v2))
-							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						else if v1Type = "sound" then
-							(if v2Type = "int" then
-								(match v1 with
-									Sound(p,d,a) -> Sound(p,d *. float_of_int (getInt v2),a)
-									| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							else if v2Type = "double" then
-								(match v1 with
-									Sound(p,d,a) -> Sound(p,d *. getDouble v2,a)
-									| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						else raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation"))
+					| Mult -> (match v1 with
+						Int(i1) -> (match v2 with
+							Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
+							| Double(d2) -> Double (float_of_int i1 *. getDouble v2)
+							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
+							| Int(i2) -> Int (i1 * i2)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Double(d1) -> (match v2 with
+							Sound(p,d,a) -> Sound(p,d1 *. d, a)
+							| Int(i2) -> Double (d1 *. float_of_int i2)
+							| Double(d2) -> Double (d1 *. d2)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Pitch(p1) -> (match v2 with
+							Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Sound(p,d,a) -> (match v2 with
+							Int(i2) -> Sound(p,d *. float_of_int i2,a)
+							| Double(d2) -> Sound(p,d *. d2,a)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
 					| Div ->
 						if v1Type = "int" then
