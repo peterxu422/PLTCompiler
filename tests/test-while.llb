@@ -6,8 +6,12 @@
 
 void main() {
     int i;
+    int n;
     boolean b;
-        
+    
+    /*
+     * Increment a counter and exit at 5.
+     */
     i = 0;
     while(i < 5) {
         print(i);
@@ -15,12 +19,28 @@ void main() {
     }
     print(42);
     
+    /*
+     * Loop until the boolean is set to false.
+     */
     b = true;
     while(b) {
         if(i == 10) {
             b = false;
         }
         print(i);
+        i = i + 1;
+    }
+
+    /*
+     * While within a while.
+     */    
+    i = 0;
+    while (i <= 5){
+        n = i;
+        while (n >=0){
+            print(n);
+            n = n - 1;
+        }
         i = i + 1;
     }
 }
