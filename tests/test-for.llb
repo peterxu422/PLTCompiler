@@ -7,8 +7,22 @@
 void main(){
 
     int i;
+    int j;
+
+    /*
+     * Basic for loop
+     */
     for (i = 0 ; i < 5 ; i = i + 1) {
         print(i);
     }
     print(42);
+
+    /*
+     * For within a for.
+     */
+    for (i = 0; i< 5; i=i+1) {
+    	for (j=5-i; j>0; j=j-1){
+    		print(i + 1);
+    	}
+    }
 }
