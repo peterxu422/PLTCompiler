@@ -1,56 +1,78 @@
 void main() {
 	int[] a;
+	int[] a2;
+	int x;
+	int c;
 	double[] d;
 	pitch[] p;
 	sound[] s;
+	sound s1;
+	sound s2;
+	sound s3;
 	int[] q;
 	boolean[] b;
-
+	
+	//Initializing and assigning to empty array. Pad the beginning with
+	//type default values
 	q = [];
-	q[100] = 1;
+	q[10] = 1;
+	print(1);
+	print(q[10]);
+	print(q);
 	
-	a = [1, 2, 3, 4];
-	d = [1.0, 2.0, 3.0, 4.0];
-	d[length(d)] = 5.0;
-	//d[4] = 5.0;
-	p = [C1, D1, E1, F1];
-	s = [|C1|:0.25:100, |D1|:0.25:100, |E1|:0.25:100, |F1|:0.25:100];
-	
+	//Boolean arrays
 	b = [];
 	b[10] = true;
-
-	print(1);
-	print(q[100]);
-
 	print(true);
 	print(b[10]);
-
 	print(false);
 	print(b[5]);
-
-	print(length(d));
-	print(d[4]);
-
+	
+	//Integer arrays
+	a = [1, 2, 3, 4];
 	print(a);
 	print([5,6,7,8]);
-
+	
+	//Double arrays, length function, assigning beyond array length
+	d = [1.0, 2.0, 3.0, 4.0];
+	d[length(d)] = 5.0;
+	print(length(d));
+	print(d[4]);
 	print(d);
 	print([5.0, 6.0, 7.0, 8.0]);
+	
+	//Initializing an array with an identifier
+	c = 5;
+	a2 = [c, 6, 7, 8];
+	print(a2);
+	
+	s1 = |G1|:0.25:100;
+	s2 = |D2|:0.25:100;
+	s3 = |F5|:0.25:100;
+	s = [s1, s2, s3];
+	print(s);
+	
+	//Pitch arrays
+	p = [C1, D1, E1, F1];
 	print(p);
 	print([A5, B5, G5]);
+	
+	//Sound Arrays
+	s = [|C1|:0.25:100, |D1|:0.25:100, |E1|:0.25:100, |F1|:0.25:100];
 	print(s);
 	print([|G5|:0.25:100, |A5|:0.25:100, |B5|:0.25:100]);
+	
+	//Accessing individual elements
 	print(a[0]);
 	print(d[1]);
 	print(p[2]);
 	print(s[3]);
 	
+	//Re-assigning individual elements
 	a[0] = 10;
+	x = 15;
+	a[3] = x;
 	d[1] = 2.5;
-	
 	print(a);
 	print(d);
-	
-	/*print(s[0][1]);
-	*/
 }
