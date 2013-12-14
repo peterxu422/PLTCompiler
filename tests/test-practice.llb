@@ -9,6 +9,7 @@ void main(){
 	int g;
 	double f;
 	int[] a; //Need to include arrays
+	int a2;
 	/*
 	i = 15;
 	f = 2.5;
@@ -16,7 +17,7 @@ void main(){
 	*/
 	//i = a[0];
 	//a = [0,1,2.5,3.2,4];
-	
+	a = [0,1,2,3,4];
 	print(|A5|:0.25:100);
 	
 	/*
@@ -81,4 +82,11 @@ void main(){
 	//Testing return Statement
 	return a;
 	*/
+	
+	loop(a2:a) {
+		a2 = 3;
+	}
+	
+	print(a);
+	print(a2);
 }

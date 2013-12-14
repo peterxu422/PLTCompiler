@@ -24,7 +24,7 @@ type stmt =
 	| If of expr * stmt * stmt
 	| For of expr * expr * expr * stmt
 	| While of expr * stmt
-	| Loop of expr * stmt
+	| Loop of expr * expr * stmt
 	
 type var_decl = {
 	varname : string;
@@ -95,7 +95,7 @@ let rec string_of_stmt = function
       "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
       string_of_expr e3  ^ ") " ^ string_of_stmt s
 	| While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-	| Loop(e, s) -> "loop (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+	| Loop(v, a, s) -> "loop (" ^ string_of_expr v ^ ":" ^ string_of_expr a ^ ") " ^ string_of_stmt s
 	
 let string_of_vdecl vdecl = vdecl.vartype ^ " " ^ vdecl.varname ^ ";\n"	
 let string_of_pdecl pdecl = pdecl.paramtype ^ " " ^ pdecl.paramname	

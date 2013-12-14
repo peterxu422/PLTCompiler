@@ -376,15 +376,6 @@ let run (vars, funcs) =
 					| _ -> raise (Failure (vType ^ " has no - operator")))
 
 			(* Arrays *)
-
-			(*| Array(e) -> let rec newelist elist = function
-							| hd :: tl -> 
-							(match hd with
-								Id(i) -> let v, env = eval env (Id(i)) in List.append elist (v::[])
-								| _ -> List.append elist hd::[])
-						  in
-						  let e2 = newelist e2 e in
-						  Array(e2), env *)
 			| Array(e) -> 
 				let evaledExprs, env = List.fold_left
 					(fun (values, env) expr ->
@@ -532,7 +523,15 @@ let run (vars, funcs) =
 						else
 							env
 					in loop env
-
+				| Loop(v, a, s) -> 
+					let rec runloop env = function
+						[] -> env
+						| hd :: tl -> let var, env = eval env (Assign(v, hd)) in
+							let env = exec env s in runloop env tl
+					in 
+					let arr, _ = eval env a in
+					(match arr with 
+						Array(x) -> runloop env x)
 				| Return(e) ->
 				let v, (locals, globals) = eval env e in
 				raise (ReturnException(v, globals))
