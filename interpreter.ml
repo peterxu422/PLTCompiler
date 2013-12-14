@@ -1,6 +1,4 @@
-open Ast 
-open Printf
-open Helper
+open Ast  open Printf open Helper
 
 module NameMap = Map.Make(struct
 	type t = string
@@ -52,8 +50,10 @@ let initType t =
     | "sound" -> Sound((["C0"], 0., 0))
     | _ -> Boolean(false)
 
-let run (vars, funcs) =
+(* global mixdown flag to see if mixdown has been called in which case we should append, not re write a file *)
+let mixdown_flag = ref false;;
 
+let run (vars, funcs) =
 	(* Put function declarations in a symbol table *)
 	let func_decls = List.fold_left
 		(fun funcs fdecl -> NameMap.add fdecl.fname fdecl funcs)
@@ -376,14 +376,22 @@ let run (vars, funcs) =
 					| _ -> raise (Failure (vType ^ " has no - operator")))
 
 			(* Arrays *)
-			| Array(e) -> let rec newelist elist = function
+
+			(*| Array(e) -> let rec newelist elist = function
 							| hd :: tl -> 
 							(match hd with
 								Id(i) -> let v, env = eval env (Id(i)) in List.append elist (v::[])
 								| _ -> List.append elist hd::[])
 						  in
 						  let e2 = newelist e2 e in
-						  Array(e2), env
+						  Array(e2), env *)
+			| Array(e) -> 
+				let evaledExprs, env = List.fold_left
+					(fun (values, env) expr ->
+						let v, env = eval env expr in v::values, env)
+					([], env) (List.rev e)
+				in
+			 	Array(evaledExprs), env
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = eval env e in
@@ -403,15 +411,30 @@ let run (vars, funcs) =
 				in
 					print_endline (print v);
 					Int(0), env
-					(*
-					print_endline ("in print");
-					print_endline (Ast.string_of_expr v);
-					Boolean(false), env *)
 
-			| Call ("mixdown", [e]) ->
-				let v, env = eval env e in
+			| Call ("mixdown", actuals) ->
+				let track_number = ref "0" in (*default track number if not specified*)
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+						(* print_endline (Ast.string_of_expr actual); *)
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in
+				(* Check args see if track number is specified *)
+				if List.length actuals = 2 then
+					begin
+						(* Checks if 2nd arg is an int and if it is within its range. Then sets track_number *)
+						(try (int_of_string (Ast.string_of_expr (List.hd (List.tl actuals)))) with 
+							Failure _ -> raise (Failure ("Invalid mixdown args. mixdown(<Array of Sounds or Sound>, <optional, Int, track_num, 0 - 15>")));
+						track_number := (Ast.string_of_expr (List.hd (List.tl actuals)));
+						if (((int_of_string !track_number) > 15) || ((int_of_string !track_number) < 0)) then 
+							raise (Failure ("Invalid track_num in mixdown. track_num should be 0 - 15"))
+					end;
+				if List.length actuals > 2 then
+					begin 
+						raise (Failure ("Invalid mixdown args. mixdown(<Array of Sounds or Sound>, <optional Int trackNum>"))
+					end;
 				let file = "bytecode" in
-				let oc = open_out file in
 				let rec writeByteCode = function
 					Sound(p,d,a) -> "[" ^ String.concat ", " p ^ "]:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
@@ -419,21 +442,20 @@ let run (vars, funcs) =
 							| hd :: tl -> ((writeByteCode hd) ^ "," ^ (build tl))
 					| _ -> raise (Failure ("Item cannot be mixdown"))
 				in 
-					(* let append_string path s =
-    					let chan = open_out_gen [Open_wronly; Open_creat] 0o666 path
-    					in let len = out_channel_length chan
-    					in
-    					    begin
-    					    seek_out chan len;
-    					    output_string chan s;
-    					    close_out chan;
-    					    end
-    				append_string file (writeByteCode v); *)
-					(*  *)
-					fprintf oc "%s\n" (writeByteCode v);
-					flush oc;
-					(*  *)
-					
+					if !mixdown_flag = false then
+						begin
+							let oc = open_out file in
+								fprintf oc "%s\n" (!track_number ^ (writeByteCode (List.hd actuals)));
+								close_out oc
+						end 
+					else
+						begin
+							let oc = open_out_gen [Open_wronly; Open_creat; Open_append; Open_text] 0o666 file in
+								output_string oc (!track_number ^ (writeByteCode (List.hd actuals)) ^ "\n");
+								close_out oc
+						end;
+					print_endline ("Mixing down track " ^ !track_number);
+					mixdown_flag := true;
 					Int(0), env
 			(* for pitches and sounds *)
 			| Call("getAmplitude", [e]) ->

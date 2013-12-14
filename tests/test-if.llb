@@ -5,8 +5,20 @@
  */
 
 void main(){
+    
+    int zero;
+    int one;
+    int two;
+    boolean t;
+    boolean f;
 
-    /*
+    zero = 0;
+    one = 1;
+    two = 2;
+    t = true;
+    f = false;
+
+    /*****************************
      * Test Case:       if(true){}
      *
      * Result:          1
@@ -16,17 +28,17 @@ void main(){
         print(1);
     }
     
-    /*
+    /*****************************
      * Test Case:       if(false){}
      *
-     * Result:          
+     * Result:          [none]
      */
 
     if (false) {
         print(2);
     }
 
-    /*
+    /*****************************
      * Test Case:       if(true){} else{}
      *
      * Result:          3
@@ -39,7 +51,7 @@ void main(){
         print(4);
     }
 
-    /*
+    /*****************************
      * Test Case:       if(false){} else{}
      *
      * Result:          6
@@ -51,4 +63,65 @@ void main(){
     else {
         print(6);
     }
+
+    /*****************************
+     * Test Case:       if(evaluate equality){}
+     *
+     * Result:          true
+     */
+
+    if (t == !f) {
+        print(true);
+    }
+
+    /*****************************
+     * Test Case:       if(evaluate inequality){}
+     *
+     * Result:          false
+     */
+
+    if (f != !f) {
+        print(false);
+    }
+
+    /*****************************
+     * Test Case:       evaluating a binary operator to boolean
+     *
+     * Result:          42
+     */
+
+    if (two > one) {
+        print(42);
+    }
+
+    /*****************************
+     * Test Case:       setting a value before evaluation
+     *
+     * Result:          69
+     */
+
+    if (f = !f) {
+        print(69);
+    }
+
+    /*****************************
+     * Test Case:       if(integer)
+     *
+     * Result:          [none]
+     */
+
+    if (two) {
+        print(69);
+    }
+
+    /*****************************
+     * Test Case:       if(zero)
+     *
+     * Result:          [none]
+     */
+
+    if (zero) {
+        print(69);
+    }
+
 }
