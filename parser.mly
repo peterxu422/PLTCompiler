@@ -94,7 +94,7 @@ stmt:
 	| FOR LPAREN expr SEMI expr SEMI expr RPAREN stmt
     	{ For($3, $5, $7, $9) }
 	| WHILE LPAREN expr RPAREN stmt			  { While($3, $5) }
-	| LOOP LPAREN expr RPAREN stmt			  { Loop($3, $5) }
+	| LOOP LPAREN expr RPAREN stmt	  { Loop($3, $5) }
 	
 expr:
 	  INT_LIT					  { Int($1) }

@@ -85,12 +85,12 @@ let run (vars, funcs) =
 				in
 				lookup v i
 			| Id(var) -> 
-			let locals, globals = env in
-			if NameMap.mem var locals then
-				(NameMap.find var locals), env
-			else if NameMap.mem var globals then
-				(NameMap.find var globals), env
-			else raise (Failure ("undeclared identifier " ^ var))
+				let locals, globals = env in
+				if NameMap.mem var locals then
+					(NameMap.find var locals), env
+				else if NameMap.mem var globals then
+					(NameMap.find var globals), env
+				else raise (Failure ("undeclared identifier " ^ var))
  			| Assign(var, e) ->
 			let v, (locals, globals) = eval env e in
 			(match var with
@@ -376,7 +376,14 @@ let run (vars, funcs) =
 					| _ -> raise (Failure (vType ^ " has no - operator")))
 
 			(* Arrays *)
-			| Array(e) -> Array(e), env
+			| Array(e) -> let rec newelist elist = function
+							| hd :: tl -> 
+							(match hd with
+								Id(i) -> let v, env = eval env (Id(i)) in List.append elist (v::[])
+								| _ -> List.append elist hd::[])
+						  in
+						  let e2 = newelist e2 e in
+						  Array(e2), env
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = eval env e in
@@ -386,6 +393,8 @@ let run (vars, funcs) =
 					| Double(d) -> string_of_float d
 					| Boolean(b) -> string_of_bool b
 					| Pitch(p) -> p
+					| Id(i) -> let v, _ = eval env (Id(i)) in
+								print v
 					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
@@ -484,23 +493,24 @@ let run (vars, funcs) =
 			Block(stmts) -> List.fold_left exec env stmts
 				| Expr(e) -> let _, env = eval env e in env
 				| If(e, s1, s2) ->
-				let v, env = eval env e in
-				exec env (if getBoolean v !=  false then s1 else s2)
-				| While(e, s) ->
-				let rec loop env =
 					let v, env = eval env e in
-					if getBoolean v != false then loop (exec env s) else env
-				in loop env
+					exec env (if getBoolean v !=  false then s1 else s2)
+				| While(e, s) ->
+					let rec loop env =
+						let v, env = eval env e in
+						if getBoolean v != false then loop (exec env s) else env
+					in loop env
 				| For(e1, e2, e3, s) ->
 				let _, env = eval env e1 in
-				let rec loop env =
-					let v, env = eval env e2 in
-					if getBoolean v != false then
-					  let _, env = eval (exec env s) e3 in
-					  loop env
-					else
-						env
-				in loop env
+					let rec loop env =
+						let v, env = eval env e2 in
+						if getBoolean v != false then
+						  let _, env = eval (exec env s) e3 in
+						  loop env
+						else
+							env
+					in loop env
+
 				| Return(e) ->
 				let v, (locals, globals) = eval env e in
 				raise (ReturnException(v, globals))
