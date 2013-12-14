@@ -1,25 +1,22 @@
-default: ast parser scanner interpreter
-	ocamlc -o interpret ast.cmo parser.cmo scanner.cmo interpreter.cmo
+OBJS = helper.cmo ast.cmo parser.cmo scanner.cmo interpreter.cmo
 
-ast: ast.ml
-	ocamlc -c ast.ml
+all: interpret
 
-parser: parser.mli
-	ocamlyacc parser.mly
-	ocamlc -c parser.mli
-	ocamlc -c parser.ml
+interpret: $(OBJS)
+	ocamlc -o interpret $(OBJS)
 
-scanner: scanner.ml
+scanner.ml: scanner.mll
 	ocamllex scanner.mll
-	ocamlc -c scanner.ml
+        
+parser.ml parser.mli: parser.mly
+	ocamlyacc parser.mly
 
-interpreter: interpreter.ml
-	ocamlc -c interpreter.ml
+%.cmo: %.ml
+	ocamlc -c $<
 
-test:
-	./testall.sh
-
-.PHONY:
+%.cmi: %.mli
+	ocamlc -c $<
+        
 clean:
 	rm -rf *.cmo
 	rm -rf *.cmi
