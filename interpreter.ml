@@ -376,7 +376,14 @@ let run (vars, funcs) =
 					| _ -> raise (Failure (vType ^ " has no - operator")))
 
 			(* Arrays *)
-			| Array(e) -> Array(e), env
+			| Array(e) -> 
+				let evaledExprs, env = List.fold_left
+					(fun (values, env) expr ->
+						let v, env = eval env expr in v::values, env)
+					([], env) (List.rev e)
+				in
+			 	Array(evaledExprs), env
+
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = eval env e in
@@ -394,10 +401,6 @@ let run (vars, funcs) =
 				in
 					print_endline (print v);
 					Int(0), env
-					(*
-					print_endline ("in print");
-					print_endline (Ast.string_of_expr v);
-					Boolean(false), env *)
 
 			| Call ("mixdown", actuals) ->
 				let track_number = ref "0" in (*default track number if not specified*)
