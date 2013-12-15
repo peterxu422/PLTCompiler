@@ -95,15 +95,19 @@ let run (vars, funcs) =
 			let v, (locals, globals) = eval env e in
 			(match var with
 				Id(name) ->
-				(* The local identifiers have already been added to ST in the first pass. 
-				Checks if it is indeed in there.*)
-				if NameMap.mem name locals then	
-				(* Updates the var in the ST to evaluated expression e, which is stored in v. 
-				Returns v as the value because this is the l-value*)
-					v, (NameMap.add name v locals, globals) 
-				else if NameMap.mem name globals then
-					v, (locals, NameMap.add name v globals)
-				else raise (Failure ("undeclared identifier " ^ name))
+				(match eval env (Id(name)) with
+					Index(a, i), _ -> eval env (Assign((Index(a,i), e)))
+					| _,_ ->
+					(* The local identifiers have already been added to ST in the first pass. 
+					Checks if it is indeed in there.*)
+					if NameMap.mem name locals then	
+					(* Updates the var in the ST to evaluated expression e, which is stored in v. 
+					Returns v as the value because this is the l-value*)
+						v, (NameMap.add name v locals, globals) 
+					else if NameMap.mem name globals then
+						v, (locals, NameMap.add name v globals)
+					else raise (Failure ("undeclared identifier " ^ name))
+				)
 				| Index(name, indices) -> 
 					let rec getIndex e = 
 						let v, env = eval env e in 
@@ -130,7 +134,7 @@ let run (vars, funcs) =
 										(initType (getType (v))))) 
 								in 
 									arr.(idx) <- v; Array.to_list arr
-						in
+					in
 					if NameMap.mem name locals then
 						let exprList = (match (NameMap.find name locals) with
 							Array(a) -> a
@@ -149,8 +153,14 @@ let run (vars, funcs) =
 
 			(* binop operators *)
 			| Binop(e1, op, e2) ->
-				let v1, env = eval env e1 in
-				let v2, env = eval env e2 in
+				let v1, env = 
+				(match eval env e1 with
+					Index(a,i), _ ->  eval env (Index(a,i))
+					| _,_ -> eval env e1) in
+				let v2, env =
+				(match eval env e2 with
+					Index(a,i), _ -> eval env (Index(a,i))
+					| _,_ -> eval env e2) in
 				let v1Type = getType v1 in
 				let v2Type = getType v2 in
 				(match op with
@@ -374,7 +384,7 @@ let run (vars, funcs) =
 					Int(i) -> Int (0 - i), env
 					| Double(d) -> Double (0. -. d), env
 					| _ -> raise (Failure (vType ^ " has no - operator")))
-
+			
 			(* Arrays *)
 			| Array(e) -> 
 				let evaledExprs, env = List.fold_left
@@ -385,8 +395,10 @@ let run (vars, funcs) =
 			 	Array(evaledExprs), env
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
-				let v, env = eval env e in
-				
+				let v, env = 
+					(match eval env e with
+						Index(a,i),_ -> eval env (Index(a,i))
+						| _,_ -> eval env e) in
 				let rec print = function
 					Int(i) -> string_of_int i
 					| Double(d) -> string_of_float d
@@ -394,10 +406,17 @@ let run (vars, funcs) =
 					| Pitch(p) -> p
 					| Id(i) -> let v, _ = eval env (Id(i)) in
 								print v
+								(*let v, _ = 
+								(match eval env (Id(i)) with
+									Index(a,i),_ -> eval env (Index(a,i))
+									| _,_ -> eval env (Id(i)))
+								in
+								print v*)
 					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
+					(*| Index(a,i) -> let v, _ = eval env (Index(a,i)) in print v*)
 					| _ -> raise (Failure ("Item cannot be printed"))
 				in
 					print_endline (print v);
@@ -523,15 +542,34 @@ let run (vars, funcs) =
 						else
 							env
 					in loop env
-				| Loop(v, a, s) -> 
-					let rec runloop env = function
-						[] -> env
-						| hd :: tl -> let var, env = eval env (Assign(v, hd)) in
+				(*| Loop(v, a, s) -> 
+                    let rec runloop env = function
+                        [] -> env
+                        | hd :: tl -> let var, env = eval env (Assign(v, hd)) in
 							let env = exec env s in runloop env tl
+                            in 
+                            let arr, _ = eval env a in
+                            (match arr with 
+                                Array(x) -> runloop env x)
+								*)
+				| Loop(v, a, s) -> 
+					let rec runloop env idx2 = function
+						[] -> env
+						| hd :: tl -> let idxlist = idx2::[] in
+							let locals, globals = env in
+							let env = 
+								if NameMap.mem v locals then
+									(NameMap.add v (Index(a,idxlist)) locals, globals)
+								else if NameMap.mem v globals then
+									(locals, NameMap.add v (Index(a,idxlist)) globals)
+								else
+									raise (Failure ("undeclared identifier " ^ v))
+						    in
+							let env = exec env s in runloop env (Int((getInt idx2)+1)) tl
 					in 
-					let arr, _ = eval env a in
+					let arr, _ = eval env (Id(a)) in
 					(match arr with 
-						Array(x) -> runloop env x)
+						Array(x) -> runloop env (Int(0)) x)
 				| Return(e) ->
 				let v, (locals, globals) = eval env e in
 				raise (ReturnException(v, globals))
