@@ -406,17 +406,10 @@ let run (vars, funcs) =
 					| Pitch(p) -> p
 					| Id(i) -> let v, _ = eval env (Id(i)) in
 								print v
-								(*let v, _ = 
-								(match eval env (Id(i)) with
-									Index(a,i),_ -> eval env (Index(a,i))
-									| _,_ -> eval env (Id(i)))
-								in
-								print v*)
 					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
-					(*| Index(a,i) -> let v, _ = eval env (Index(a,i)) in print v*)
 					| _ -> raise (Failure ("Item cannot be printed"))
 				in
 					print_endline (print v);

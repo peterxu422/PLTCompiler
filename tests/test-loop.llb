@@ -2,30 +2,17 @@ void main() {
 	sound c;
 	sound d;
 	sound e;
-	sound f;
-	sound g;
-	sound a;
-	sound b;
 	sound scale;
 	sound s;
 	
 	c = |C1|:0.25:100;
 	d = |D1|:0.25:100;
 	e = |E1|:0.25:100;
-	f = |F1|:0.25:100;
-	g = |G1|:0.25:100;
-	a = |A1|:0.25:100;
-	b = |B1|:0.25:100;
 	
-	
-	scale =	[c, d, e, f, g, a, b];
-	loop(scale) {
-		printSound(s);
-	}
-	
-	/*
+	scale =	[c, d, e];
+	print(scale);
 	loop(s : scale) {
-		printSound(s);
+		s = s * 3;
 	}
-	*/
+	print(scale);
 }
