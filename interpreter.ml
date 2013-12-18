@@ -12,6 +12,7 @@ let getType v =
 		| Boolean(v) -> "bool"
 		| Pitch(v) -> "pitch"
 		| Sound(p,d,a) -> "sound"
+		| Array(a) -> "array"
 		| _ -> "unmatched_type"
 
 let getInt v = 
@@ -24,6 +25,12 @@ let getBoolean v =
 		Boolean(v) -> v
 		| _ -> false
 
+(* This function is used for the array * int operations *)
+let rec buildList ls i =
+	match i with
+		1 -> ls
+		| _ -> ls @ (buildList ls (i-1))
+
 exception ReturnException of expr * expr NameMap.t
 
 let initType t = 
@@ -33,6 +40,7 @@ let initType t =
     | "bool" -> Boolean(false)
     | "pitch" -> Pitch("C0")
     | "sound" -> Sound((["C0"], 0., 0))
+    | "soundArray" -> Array([Sound(["C0"], 0., 0)])
     | _ -> Boolean(false)
 
 (* global mixdown flag to see if mixdown has been called in which case we should append, not re write a file *)
@@ -54,6 +62,7 @@ let run (vars, funcs) =
 			| Boolean(b) -> Boolean(b), env
 			| Pitch(p) -> Pitch(p), env
 			| Sound(p,d,a) -> Sound(p,d,a), env
+			| Array(a) -> Array(a), env
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
 				let rec lookup arr indices =
 					let arr = match arr with
@@ -198,6 +207,9 @@ let run (vars, funcs) =
 						| Sound(p,d,a) -> (match v2 with
 							Int(i2) -> Sound(p,d *. float_of_int i2,a)
 							| Double(d2) -> Sound(p,d *. d2,a)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Array(a) -> (match v2 with
+							Int(i2) -> Array(buildList a i2)
 							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
@@ -391,7 +403,7 @@ let run (vars, funcs) =
 					| Pitch(p) -> p
 					| Id(i) -> let v, _ = eval env (Id(i)) in
 								print v
-					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
+					| Sound(p,d,a) -> "|" ^ String.concat ", " (List.rev p) ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
