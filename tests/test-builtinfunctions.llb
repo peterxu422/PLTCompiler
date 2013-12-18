@@ -29,5 +29,8 @@ void main(){
 	print(length(three));
 	print(length([]));
 
+	a = setDuration(a, 5.0);
+	print(getDuration(a));
+
 	/* print(length(1)); length can only be called on arrays*/
 }

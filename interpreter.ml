@@ -378,6 +378,24 @@ let run (vars, funcs) =
 					([], env) (List.rev e)
 				in
 			 	Array(evaledExprs), env
+			| Call("setDuration", actuals) -> 
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+
+				in let newDuration = 
+					(match (List.nth actuals 1) with
+						Double(d) -> d
+						(* | Int(i) -> Double(float_of_int i) *)
+						| _ -> raise (Failure ("Second argument must evaluate to a double"))
+					)
+				in  
+				(match (List.hd actuals) with
+					Sound(p, d, a) -> Sound(p,newDuration,a), env
+					| _ -> raise (Failure ("First argument must be a sound"))
+				)
+
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = 
