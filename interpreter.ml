@@ -5,6 +5,8 @@ module NameMap = Map.Make(struct
 	let compare x y = Pervasives.compare x y
 end)
 
+let _ = Random.self_init()
+
 let getType v = 
 	match v with
 		Int(v) -> "int"
@@ -535,6 +537,18 @@ let run (vars, funcs) =
 					  Array(List.rev(strings_to_pitches p)), env
 					| Pitch(p) -> Pitch(p), env
 					| _ -> raise (Failure ("getPitch can only be called on sounds or pitches"))
+				)
+			| Call("randomInt", [bound]) -> 
+				let v, env = eval env bound in
+				(match v with
+					  Int(i) -> Int(Random.int i), env
+					| _ -> raise (Failure ("argument must be an int"))
+				)
+			| Call("randomDouble", [bound]) ->
+				let v, env = eval env bound in
+				(match v with
+					  Double(d) -> Double(Random.float d), env
+					| _ -> raise (Failure ("argument must be a double"))
 				)
 			(* for arrays eyes only *)
 			| Call("length",[e]) -> 
