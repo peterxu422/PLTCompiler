@@ -19,25 +19,10 @@ let getInt v =
 		Int(v) -> v
 		| _ -> 0
 
-let getDouble v =
-	match v with
-		Double(v) -> v
-		| _ -> 0.0
-
 let getBoolean v =
 	match v with
 		Boolean(v) -> v
 		| _ -> false
-
-let getPitch v =
-	match v with
-		Pitch(v) -> v
-		| _ -> "C0"
-
-let getSound v =
-	match v with
-		Sound(p,d,a) -> (p,d,a)
-		| _ -> (["C0"], 0., 0)
 
 exception ReturnException of expr * expr NameMap.t
 
@@ -198,7 +183,7 @@ let run (vars, funcs) =
 					| Mult -> (match v1 with
 						Int(i1) -> (match v2 with
 							Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
-							| Double(d2) -> Double (float_of_int i1 *. getDouble v2)
+							| Double(d2) -> Double (float_of_int i1 *. d2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
 							| Int(i2) -> Int (i1 * i2)
 							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
