@@ -27,11 +27,7 @@ let getBoolean v =
 		Boolean(v) -> v
 		| _ -> false
 
-(* This function is used for the array * int and int * array operations *)
-let rec buildList ls i =
-	match i with
-		1 -> ls
-		| _ -> ls @ (buildList ls (i-1))
+
 
 exception ReturnException of expr * expr NameMap.t
 
@@ -64,7 +60,16 @@ let run (vars, funcs) =
 			| Boolean(b) -> Boolean(b), env
 			| Pitch(p) -> Pitch(p), env
 			| Sound(p,d,a) -> Sound(p,d,a), env
-			| Array(a) -> Array(a), env
+
+			(* Arrays *)
+			| Array(e) -> 
+				let evaledExprs, env = List.fold_left
+					(fun (values, env) expr ->
+						let v, env = eval env expr in v::values, env)
+					([], env) (List.rev e)
+				in
+			 	Array(evaledExprs), env
+
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
 				let rec lookup arr indices =
 					let arr = match arr with
@@ -190,30 +195,37 @@ let run (vars, funcs) =
 							| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 						| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 					(* v1 * v2 *)
-					| Mult -> (match v1 with
-						Int(i1) -> (match v2 with
-							Array(a) -> Array (buildList a i1)
-							| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
-							| Double(d2) -> Double (float_of_int i1 *. d2)
-							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
-							| Int(i2) -> Int (i1 * i2)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						| Double(d1) -> (match v2 with
-							Sound(p,d,a) -> Sound(p,d1 *. d, a)
-							| Int(i2) -> Double (d1 *. float_of_int i2)
-							| Double(d2) -> Double (d1 *. d2)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						| Pitch(p1) -> (match v2 with
-							Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						| Sound(p,d,a) -> (match v2 with
-							Int(i2) -> Sound(p,d *. float_of_int i2,a)
-							| Double(d2) -> Sound(p,d *. d2,a)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						| Array(a) -> (match v2 with
-							Int(i2) -> Array (buildList a i2)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+					| Mult ->
+						(* Used for the array * int and int * array operations *)
+						let rec buildList ls i =
+							match i with
+								1 -> ls
+								| _ -> ls @ (buildList ls (i-1))
+						in
+						(match v1 with
+							Int(i1) -> (match v2 with
+								Array(a) -> Array (buildList a i1)
+								| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
+								| Double(d2) -> Double (float_of_int i1 *. d2)
+								| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
+								| Int(i2) -> Int (i1 * i2)
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| Double(d1) -> (match v2 with
+								Sound(p,d,a) -> Sound(p,d1 *. d, a)
+								| Int(i2) -> Double (d1 *. float_of_int i2)
+								| Double(d2) -> Double (d1 *. d2)
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| Pitch(p1) -> (match v2 with
+								Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| Sound(p,d,a) -> (match v2 with
+								Int(i2) -> Sound(p,d *. float_of_int i2,a)
+								| Double(d2) -> Sound(p,d *. d2,a)
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| Array(a) -> (match v2 with
+								Int(i2) -> Array (buildList a i2)
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
 					| Div -> (match v1 with
 						Int(i1) -> (match v2 with
@@ -384,14 +396,6 @@ let run (vars, funcs) =
 					| Double(d) -> Double (0. -. d), env
 					| _ -> raise (Failure (vType ^ " has no - operator")))
 			
-			(* Arrays *)
-			| Array(e) -> 
-				let evaledExprs, env = List.fold_left
-					(fun (values, env) expr ->
-						let v, env = eval env expr in v::values, env)
-					([], env) (List.rev e)
-				in
-			 	Array(evaledExprs), env
 			| Call("setDuration", actuals) -> 
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
