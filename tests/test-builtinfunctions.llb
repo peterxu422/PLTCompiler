@@ -41,7 +41,7 @@ void main(){
 	a = setPitch(a, [C4+12]);
 	print(getPitch(a));
 
-	print(randomInt(32));
+	//print(randomInt(32));
 
 
 	/* print(length(1)); length can only be called on arrays*/
