@@ -29,5 +29,18 @@ void main(){
 	print(length(three));
 	print(length([]));
 
+	a = setDuration(a, 2.5+2.5);
+	print(getDuration(a));
+
+	a = setAmplitude(a, 45+5);
+	print(getAmplitude(a));
+
+	a = setPitch(a, [C4+1, F4+12]);
+	print(getPitch(a));
+
+	a = setPitch(a, [C4+12]);
+	print(getPitch(a));
+
+
 	/* print(length(1)); length can only be called on arrays*/
 }
