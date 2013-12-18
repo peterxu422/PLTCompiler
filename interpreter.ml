@@ -191,7 +191,7 @@ let run (vars, funcs) =
 					(* v1 * v2 *)
 					| Mult -> (match v1 with
 						Int(i1) -> (match v2 with
-							Array(a) -> Array (buildList a i2)
+							Array(a) -> Array (buildList a i1)
 							| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
 							| Double(d2) -> Double (float_of_int i1 *. d2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
