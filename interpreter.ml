@@ -110,7 +110,6 @@ let run (vars, funcs) =
 							if idx < (List.length exprs) then
 								let arr = (Array.of_list exprs) in arr.(idx) <- v; Array.to_list arr
 							else
-
 								(* TODO: have this init with the initType of the array *)
 								let arr = 
 								(Array.append 
@@ -383,11 +382,11 @@ let run (vars, funcs) =
 					(fun (actuals, env) actual ->
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
-
-				in let newDuration = 
+				in if (List.length actuals != 2)
+				then raise(Failure("setDuration takes a sound and a double"))
+				else let newDuration = 
 					(match (List.nth actuals 1) with
 						Double(d) -> d
-						(* | Int(i) -> Double(float_of_int i) *)
 						| _ -> raise (Failure ("Second argument must evaluate to a double"))
 					)
 				in  
@@ -395,7 +394,41 @@ let run (vars, funcs) =
 					Sound(p, d, a) -> Sound(p,newDuration,a), env
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
-
+			| Call("setAmplitude", actuals) ->
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in if (List.length actuals != 2)
+				then raise(Failure("setAmplitude takes a sound and an iteger"))
+				else let newAmplitude = 
+					(match (List.nth actuals 1) with
+						Int(i) -> i
+						| _ -> raise (Failure ("Second argument must evaluate to an integer"))
+					)
+				in  
+				(match (List.hd actuals) with
+					Sound(p, d, a) -> Sound(p,d,newAmplitude), env
+					| _ -> raise (Failure ("First argument must be a sound"))
+				)
+			| Call("setPitch", actuals) ->
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in if (List.length actuals != 2)
+				then raise(Failure("setPitches takes a sound and a pitch array"))
+				else let newPitches = 
+					(match (List.nth actuals 1) with
+						Array(i) -> (* print_endline (string_of_expr (List.hd i)); *)
+							List.rev (List.map (fun e -> string_of_expr e) i)
+						| _ -> raise (Failure ("Second argument must be an array of pitches"))
+					)
+				in  
+				(match (List.hd actuals) with
+					Sound(p, d, a) -> Sound(newPitches,d,a), env
+					| _ -> raise (Failure ("First argument must be a sound"))
+				)
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = 
