@@ -25,7 +25,7 @@ let getBoolean v =
 		Boolean(v) -> v
 		| _ -> false
 
-(* This function is used for the array * int operations *)
+(* This function is used for the array * int and int * array operations *)
 let rec buildList ls i =
 	match i with
 		1 -> ls
@@ -191,7 +191,8 @@ let run (vars, funcs) =
 					(* v1 * v2 *)
 					| Mult -> (match v1 with
 						Int(i1) -> (match v2 with
-							Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
+							Array(a) -> Array (buildList a i2)
+							| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
 							| Double(d2) -> Double (float_of_int i1 *. d2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
 							| Int(i2) -> Int (i1 * i2)
@@ -209,7 +210,7 @@ let run (vars, funcs) =
 							| Double(d2) -> Sound(p,d *. d2,a)
 							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 						| Array(a) -> (match v2 with
-							Int(i2) -> Array(buildList a i2)
+							Int(i2) -> Array (buildList a i2)
 							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
