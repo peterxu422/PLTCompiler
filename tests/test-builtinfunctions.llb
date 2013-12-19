@@ -15,8 +15,8 @@ void main(){
 	two = [1, 2];
 	three = [1, 2, 3];
 
-	print(getPitch(a));
-	print(getPitch(b));
+	print(getPitches(a));
+	print(getPitches(b));
 
 	print(getDuration(a));
 	print(getDuration(c));
@@ -35,11 +35,11 @@ void main(){
 	a = setAmplitude(a, 45+5);
 	print(getAmplitude(a));
 
-	a = setPitch(a, [C4+1, F4+12]);
-	print(getPitch(a));
+	a = setPitches(a, [C4+1, F4+12]);
+	print(getPitches(a));
 
-	a = setPitch(a, [C4+12]);
-	print(getPitch(a));
+	a = setPitches(a, [C4+12]);
+	print(getPitches(a));
 
 	//print(randomInt(32));
 
