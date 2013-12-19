@@ -89,9 +89,9 @@ let run (vars, funcs) =
 					in
 					let index, env = eval env indices in 
 					(match index with 
-						Int(i) -> try List.nth arr i, env
-							with Failure("nth") -> raise (Failure "Index out of bounds")
-						|_ -> raise (Failure "Invalid index")
+						Int(i) -> (try List.nth arr i, env
+							with Failure("nth") -> raise (Failure "Index out of bounds"))
+						| _ -> raise (Failure "Invalid index")
 					)
 				in
 				lookup v (List.hd i)
@@ -133,12 +133,12 @@ let run (vars, funcs) =
 						if NameMap.mem name locals then	
 							begin
 								(*if array, check the type of its elements instead*)
-								let v1Type2 = if v1Type = "array" then
-									(getType (match v1 with Array(v::_) -> v))
-								else v1Type in
-								let v2Type2 = if v2Type = "array" then
-									(getType (match v2 with Array(v::_) -> v))
-								else v2Type in
+								let v1Type2 = (match v1 with
+									Array(v::_) -> getType(v)
+									| _ -> v1Type) in
+								let v2Type2 = (match v2 with 
+									Array(v::_) -> getType(v)
+									| _ -> v2Type) in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
 								Returns v as the value because this is the l-value*)

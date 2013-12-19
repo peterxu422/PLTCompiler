@@ -33,7 +33,7 @@ end
 `ocamlc -c parser.ml #{supress_string}`
 `ocamlc -c printAst.ml #{supress_string}`
 `ocamlc -c helper.ml #{supress_string}`
-`ocamlc -c -w -8 interpreter.ml #{supress_string}`
+`ocamlc -c interpreter.ml #{supress_string}`
 `ocamlc -o interpret ast.cmo helper.cmo parser.cmo scanner.cmo interpreter.cmo #{supress_string}`
 `ocamlc -o printAst ast.cmo parser.cmo scanner.cmo printAst.cmo #{supress_string}`
 
