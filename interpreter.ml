@@ -5,6 +5,7 @@ module NameMap = Map.Make(struct
 	let compare x y = Pervasives.compare x y
 end)
 
+(* Returns the type of an expression v *)
 let getType v = 
 	match v with
 		Int(v) -> "int"
@@ -15,15 +16,15 @@ let getType v =
 		| Array(a) -> "array"
 		| _ -> "unmatched_type"
 
+(* Returns the evaluation of the boolean expression v *)
 let getBoolean v =
 	match v with
-		Boolean(v) -> v
+		Boolean(a) -> a
 		| _ -> false
-
-
 
 exception ReturnException of expr * expr NameMap.t
 
+(* Sets the default initialization value for a given type t *)
 let initType t = 
   match t with
     "int" -> Int(0)
@@ -31,7 +32,6 @@ let initType t =
     | "bool" -> Boolean(false)
     | "pitch" -> Pitch("C0")
     | "sound" -> Sound((["C0"], 0., 0))
-    | "soundArray" -> Array([Sound(["C0"], 0., 0)])
     | _ -> Boolean(false)
 
 (* global mixdown flag to see if mixdown has been called in which case we should append, not re write a file *)
@@ -194,31 +194,30 @@ let run (vars, funcs) =
 							match i with
 								1 -> ls
 								| _ -> ls @ (buildList ls (i-1))
-						in
-						(match v1 with
-							Int(i1) -> (match v2 with
-								Array(a) -> Array (buildList a i1)
-								| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
-								| Double(d2) -> Double (float_of_int i1 *. d2)
-								| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
-								| Int(i2) -> Int (i1 * i2)
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							| Double(d1) -> (match v2 with
-								Sound(p,d,a) -> Sound(p,d1 *. d, a)
-								| Int(i2) -> Double (d1 *. float_of_int i2)
-								| Double(d2) -> Double (d1 *. d2)
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							| Pitch(p1) -> (match v2 with
-								Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							| Sound(p,d,a) -> (match v2 with
-								Int(i2) -> Sound(p,d *. float_of_int i2,a)
-								| Double(d2) -> Sound(p,d *. d2,a)
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							| Array(a) -> (match v2 with
-								Int(i2) -> Array (buildList a i2)
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						in (match v1 with
+						Int(i1) -> (match v2 with
+							Array(a) -> Array (buildList a i1)
+							| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
+							| Double(d2) -> Double (float_of_int i1 *. d2)
+							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
+							| Int(i2) -> Int (i1 * i2)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Double(d1) -> (match v2 with
+							Sound(p,d,a) -> Sound(p,d1 *. d, a)
+							| Int(i2) -> Double (d1 *. float_of_int i2)
+							| Double(d2) -> Double (d1 *. d2)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Pitch(p1) -> (match v2 with
+							Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Sound(p,d,a) -> (match v2 with
+							Int(i2) -> Sound(p,d *. float_of_int i2,a)
+							| Double(d2) -> Sound(p,d *. d2,a)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Array(a) -> (match v2 with
+							Int(i2) -> Array (buildList a i2)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
 					| Div -> (match v1 with
 						Int(i1) -> (match v2 with
