@@ -27,8 +27,6 @@ let getBoolean v =
 		Boolean(v) -> v
 		| _ -> false
 
-
-
 exception ReturnException of expr * expr NameMap.t
 
 let initType t = 
@@ -156,22 +154,32 @@ let run (vars, funcs) =
 								(Array.append 
 									(Array.of_list exprs) 
 									(Array.make (1+idx-(List.length exprs)) 
-										(initType (getType (v))))) 
-								in 
+										(initType v2Type))) 
+							in 
 									arr.(idx) <- v; Array.to_list arr
 					in
 					if NameMap.mem name locals then
-						let exprList = (match (NameMap.find name locals) with
-							Array(a) -> a
-							| _ -> raise (Failure (name ^ " is not an array"))) in
-						let newArray = Array(setElt exprList indices) in
-						v, (NameMap.add name newArray locals, globals)
+						begin
+							let exprList = (match (NameMap.find name locals) with
+								Array(a) -> a
+								| _ -> raise (Failure (name ^ " is not an array"))) in
+							let newArray = Array(setElt exprList indices) in
+							
+							if v1Type = v2Type then
+								v, (NameMap.add name newArray locals, globals)
+							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
+						end
 					else if (NameMap.mem name globals) then
-						let exprList = (match (NameMap.find name locals) with
-							Array(a) -> a
-							| _ -> raise (Failure (name ^ " is not an array"))) in
-						let newArray = Array(setElt exprList indices) in
-						v, (locals, NameMap.add name newArray globals)
+						begin
+							let exprList = (match (NameMap.find name globals) with
+								Array(a) -> a
+								| _ -> raise (Failure (name ^ " is not an array"))) in
+							let newArray = Array(setElt exprList indices) in
+	
+							if v1Type = v2Type then
+								v, (locals, NameMap.add name newArray globals)
+							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
+						end
 					else
 						raise (Failure (name ^ " was not properly initialized as an array"))
 			| _ -> raise (Failure ("Can only assign variables or array indices")))
