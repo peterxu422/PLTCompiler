@@ -12,6 +12,7 @@ let getType v =
 		| Boolean(v) -> "bool"
 		| Pitch(v) -> "pitch"
 		| Sound(p,d,a) -> "sound"
+		| Array(v) -> "array"
 		| _ -> "unmatched_type"
 
 let getInt v = 
@@ -33,6 +34,11 @@ let initType t =
     | "bool" -> Boolean(false)
     | "pitch" -> Pitch("C0")
     | "sound" -> Sound((["C0"], 0., 0))
+	| "intArr" -> Array([Int(0)])
+	| "doubleArr" -> Array([Double(0.0)])
+	| "booleanArr" -> Array([Boolean(false)])
+	| "pitchArr" -> Array([Pitch("C0")])
+	| "soundArr" -> Array([Sound(["C0"], 0., 0)])
     | _ -> Boolean(false)
 
 (* global mixdown flag to see if mixdown has been called in which case we should append, not re write a file *)
@@ -77,6 +83,20 @@ let run (vars, funcs) =
 					(NameMap.find var globals), env
 				else raise (Failure ("undeclared identifier " ^ var))
  			| Assign(var, e) ->
+			let firstType, _  = (match var with 
+				Index(a, i) -> eval env (Index(a, [Int(0)]))
+				| _ -> var, env
+			) in
+		(*	print_endline (string_of_expr firstType);*)
+
+			let lvar = (match var with
+				Index(a, i) -> Index(a, [Int(0)])
+				| _ -> var
+			) in
+				let v1, env = eval env lvar in
+				let v2, env = eval env e in
+				let v1Type = getType v1 in
+				let v2Type = getType e in
 			let v, (locals, globals) = eval env e in
 			(match var with
 				Id(name) ->
@@ -86,11 +106,19 @@ let run (vars, funcs) =
 					(* The local identifiers have already been added to ST in the first pass. 
 					Checks if it is indeed in there.*)
 					if NameMap.mem name locals then	
+						begin
 					(* Updates the var in the ST to evaluated expression e, which is stored in v. 
 					Returns v as the value because this is the l-value*)
-						v, (NameMap.add name v locals, globals) 
+							if v1Type = v2Type then
+								v, (NameMap.add name v locals, globals)
+							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
+						end
 					else if NameMap.mem name globals then
-						v, (locals, NameMap.add name v globals)
+						begin
+							if v1Type = v2Type then
+								v, (locals, NameMap.add name v globals)
+							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
+						end
 					else raise (Failure ("undeclared identifier " ^ name))
 				)
 				| Index(name, indices) -> 
