@@ -27,6 +27,10 @@ public class BytecodeTranslator {
 			br = new BufferedReader(new FileReader(fileName));
 			while ((currentLine = br.readLine()) != null) {
 				if(first ==1){
+					if(currentLine.charAt(0) == 'x'){
+						//System.err.println("Lullabyte file failed or mixdown was not called.");
+						System.exit(0);
+					}
 					tempo = tempo + currentLine + " ";
 				} else {
 					byteCode += currentLine.charAt(0) + currentLine.substring(2, currentLine.length()-1) + "\n";	
@@ -95,6 +99,7 @@ public class BytecodeTranslator {
 				}
 			}
 
+			//w, p, b
 			midiWrite = tempo + midiWrite;
 			p.add(midiWrite);
 			player.saveMidi(p, new File("music-file.mid")); 

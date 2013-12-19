@@ -1,4 +1,4 @@
-open Ast  open Printf open Helper
+open Ast open Printf open Helper
 
 module NameMap = Map.Make(struct
 	type t = string
@@ -41,9 +41,17 @@ let initType t =
 	| "soundArr" -> Array([Sound(["C0"], 0., 0)])
     | _ -> Boolean(false)
 
+let stopMixDown () = 
+	let file = "bytecode" in
+		let oc = open_out file in
+			(fprintf oc "x\n";
+			close_out oc)
+
 (* global mixdown flag to see if mixdown has been called in which case we should append, not re write a file *)
 let first_mixdown_flag = ref false;;
+(* default bpm value *)
 let bpm = ref 220;;
+(* if mixdown is not called, bytecode has x\n to indicate to BytecodeTranslator that it shouldn't attempt to play/write MIDI *)
 
 let run (vars, funcs) =
 	(* Put function declarations in a symbol table *)
@@ -70,6 +78,9 @@ let run (vars, funcs) =
 					([], env) (List.rev e)
 				in
 				(* type check *)
+				(* make sure array isn't empty *)
+				if evaledExprs = [] then raise (Failure("Cannot initialize empty array"))
+				else
 				(* traverse through the array, make sure every element in the array is the same*)
 				let hd = List.hd evaledExprs in
 				let v1Type = getType hd in
@@ -105,10 +116,10 @@ let run (vars, funcs) =
  			| Assign(var, e) ->
 
 				(* unused *)
-				let firstType, _  = (match var with 
+(*				let firstType, _  = (match var with 
 					Index(a, i) -> eval env (Index(a, [Int(0)]))
 					| _ -> var, env
-				) in
+				) in *)
 
 				(* for type check, use Index[0] as reference *)
 				let lvar = (match var with
@@ -132,13 +143,15 @@ let run (vars, funcs) =
 						Checks if it is indeed in there.*)
 						if NameMap.mem name locals then	
 							begin
-								(*if array, check the type of its elements instead*)
-								let v1Type2 = (match v1 with
-									Array(v::_) -> getType(v)
-									| _ -> v1Type) in
-								let v2Type2 = (match v2 with 
-									Array(v::_) -> getType(v)
-									| _ -> v2Type) in
+								(* if both are arrays, check the type of its elements instead *)
+								let v1Type2 = if v1Type = "array" && v2Type = "array" then
+									(getType (match v1 with Array(v::_) -> v
+															| _ -> v1))
+								else v1Type in
+								let v2Type2 = if v2Type = "array" && v1Type = "array" then
+									(getType (match v2 with Array(v::_) -> v
+															| _ -> v2))
+								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
 								Returns v as the value because this is the l-value*)
@@ -148,12 +161,15 @@ let run (vars, funcs) =
 							end
 						else if NameMap.mem name globals then
 							begin
-								let v1Type2 = (match v1 with
-									Array(v::_) -> getType(v)
-									| _ -> v1Type) in
-								let v2Type2 = (match v2 with 
-									Array(v::_) -> getType(v)
-									| _ -> v2Type) in
+								(* if both are arrays, check the type of its elements instead *)
+								let v1Type2 = if v1Type = "array" && v2Type = "array" then
+									(getType (match v1 with Array(v::_) -> v
+															| _ -> v1))
+								else v1Type in
+								let v2Type2 = if v2Type = "array" && v1Type = "array" then
+									(getType (match v2 with Array(v::_) -> v
+															| _ -> v2))
+								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
 								Returns v as the value because this is the l-value*)
@@ -550,22 +566,25 @@ let run (vars, funcs) =
 					begin
 						(* Checks if 2nd arg is an int and if it is within its range. Then sets track_number *)
 						(try (int_of_string (Ast.string_of_expr (List.hd (List.tl actuals)))) with 
-							Failure _ -> raise (Failure ("Invalid mixdown args. mixdown(<Array of Sounds or Sound>, <optional, Int, track_num, 0 - 15>")));
+							Failure _ -> raise (stopMixDown(); Failure ("Invalid mixdown args. mixdown(<Array of Sounds or Sound>, <optional, Int, track_num, 0 - 15>")));
 						track_number := (Ast.string_of_expr (List.hd (List.tl actuals)));
 						if (((int_of_string !track_number) > 15) || ((int_of_string !track_number) < 0)) then 
 							raise (Failure ("Invalid track_num in mixdown. track_num should be 0 - 15"))
 					end;
 				if List.length actuals > 2 then
-					begin 
+					begin
+						stopMixDown();
 						raise (Failure ("Invalid mixdown args. mixdown(<Array of Sounds or Sound>, <optional Int trackNum>"))
 					end;
 				let file = "bytecode" in
 				let rec writeByteCode = function
 					Sound(p,d,a) -> "[" ^ String.concat ", " p ^ "]:" ^ string_of_float d ^ ":" ^ string_of_int a
-					| Array(a) -> "[" ^ build a ^ "]" and build = function
+					| Array(a) -> let rec build = function
 							hd :: [] -> (writeByteCode hd)
 							| hd :: tl -> ((writeByteCode hd) ^ "," ^ (build tl))
-					| _ -> raise (Failure ("Item cannot be mixdown"))
+						in 
+						"[" ^ build a ^ "]" 
+					| _ -> raise (stopMixDown(); Failure ("argument cannot be mixdown"))
 				in 
 					if !first_mixdown_flag = false then
 						begin
@@ -742,6 +761,7 @@ let run (vars, funcs) =
 let _ = 
 	let lexbuf = Lexing.from_channel stdin in 
 	let program = Parser.program Scanner.token lexbuf in
+	stopMixDown();
 	run program
 
 		(*print_endline (Ast.string_of_program program)*)
