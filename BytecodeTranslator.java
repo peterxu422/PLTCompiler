@@ -22,7 +22,6 @@ public class BytecodeTranslator {
 
 		try {
 
-			//String tempo = "T220 ";
 			String tempo = "T";
 			int first = 1;
 			br = new BufferedReader(new FileReader(fileName));
