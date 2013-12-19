@@ -715,7 +715,9 @@ let run (vars, funcs) =
 					in 
 					let arr, _ = eval env (Id(a)) in
 					(match arr with 
-						Array(x) -> runloop env (Int(0)) x)
+						Array(x) -> runloop env (Int(0)) x
+						| _ -> raise (Failure (a^" is not an array")))
+
 				| Return(e) ->
 				let v, (locals, globals) = eval env e in
 				raise (ReturnException(v, globals))
