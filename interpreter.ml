@@ -5,6 +5,8 @@ module NameMap = Map.Make(struct
 	let compare x y = Pervasives.compare x y
 end)
 
+let _ = Random.self_init()
+
 let getType v = 
 	match v with
 		Int(v) -> "int"
@@ -24,6 +26,8 @@ let getBoolean v =
 	match v with
 		Boolean(v) -> v
 		| _ -> false
+
+
 
 exception ReturnException of expr * expr NameMap.t
 
@@ -60,21 +64,30 @@ let run (vars, funcs) =
 			| Boolean(b) -> Boolean(b), env
 			| Pitch(p) -> Pitch(p), env
 			| Sound(p,d,a) -> Sound(p,d,a), env
+
+			(* Arrays *)
+			| Array(e) -> 
+				let evaledExprs, env = List.fold_left
+					(fun (values, env) expr ->
+						let v, env = eval env expr in v::values, env)
+					([], env) (List.rev e)
+				in
+			 	Array(evaledExprs), env
+
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
 				let rec lookup arr indices =
 					let arr = match arr with
 						Array(n) -> n
 						| _ -> raise (Failure(a ^ " is not an array. Cannot access index"))
 					in
-					match indices with
-					[] -> raise (Failure ("Error indexing array without indices"))
-					| Int(i) :: [] -> 
-					try
-						List.nth arr i, env
-					with Failure("nth") -> raise (Failure "Index out of bounds")
-					| _ -> raise (Failure "Invalid index")
+					let index, env = eval env indices in 
+					(match index with 
+						Int(i) -> try List.nth arr i, env
+							with Failure("nth") -> raise (Failure "Index out of bounds")
+						|_ -> raise (Failure "Invalid index")
+					)
 				in
-				lookup v i
+				lookup v (List.hd i)
 			| Id(var) -> 
 				let locals, globals = env in
 				if NameMap.mem var locals then
@@ -138,7 +151,6 @@ let run (vars, funcs) =
 							if idx < (List.length exprs) then
 								let arr = (Array.of_list exprs) in arr.(idx) <- v; Array.to_list arr
 							else
-
 								(* TODO: have this init with the initType of the array *)
 								let arr = 
 								(Array.append 
@@ -208,26 +220,37 @@ let run (vars, funcs) =
 							| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 						| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 					(* v1 * v2 *)
-					| Mult -> (match v1 with
-						Int(i1) -> (match v2 with
-							Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
-							| Double(d2) -> Double (float_of_int i1 *. d2)
-							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
-							| Int(i2) -> Int (i1 * i2)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						| Double(d1) -> (match v2 with
-							Sound(p,d,a) -> Sound(p,d1 *. d, a)
-							| Int(i2) -> Double (d1 *. float_of_int i2)
-							| Double(d2) -> Double (d1 *. d2)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						| Pitch(p1) -> (match v2 with
-							Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						| Sound(p,d,a) -> (match v2 with
-							Int(i2) -> Sound(p,d *. float_of_int i2,a)
-							| Double(d2) -> Sound(p,d *. d2,a)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+					| Mult ->
+						(* Used for the array * int and int * array operations *)
+						let rec buildList ls i =
+							match i with
+								1 -> ls
+								| _ -> ls @ (buildList ls (i-1))
+						in
+						(match v1 with
+							Int(i1) -> (match v2 with
+								Array(a) -> Array (buildList a i1)
+								| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
+								| Double(d2) -> Double (float_of_int i1 *. d2)
+								| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
+								| Int(i2) -> Int (i1 * i2)
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| Double(d1) -> (match v2 with
+								Sound(p,d,a) -> Sound(p,d1 *. d, a)
+								| Int(i2) -> Double (d1 *. float_of_int i2)
+								| Double(d2) -> Double (d1 *. d2)
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| Pitch(p1) -> (match v2 with
+								Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| Sound(p,d,a) -> (match v2 with
+								Int(i2) -> Sound(p,d *. float_of_int i2,a)
+								| Double(d2) -> Sound(p,d *. d2,a)
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| Array(a) -> (match v2 with
+								Int(i2) -> Array (buildList a i2)
+								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
 					| Div -> (match v1 with
 						Int(i1) -> (match v2 with
@@ -398,24 +421,16 @@ let run (vars, funcs) =
 					| Double(d) -> Double (0. -. d), env
 					| _ -> raise (Failure (vType ^ " has no - operator")))
 			
-			(* Arrays *)
-			| Array(e) -> 
-				let evaledExprs, env = List.fold_left
-					(fun (values, env) expr ->
-						let v, env = eval env expr in v::values, env)
-					([], env) (List.rev e)
-				in
-			 	Array(evaledExprs), env
 			| Call("setDuration", actuals) -> 
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
-
-				in let newDuration = 
+				in if (List.length actuals != 2)
+				then raise(Failure("setDuration takes a sound and a double"))
+				else let newDuration = 
 					(match (List.nth actuals 1) with
 						Double(d) -> d
-						(* | Int(i) -> Double(float_of_int i) *)
 						| _ -> raise (Failure ("Second argument must evaluate to a double"))
 					)
 				in  
@@ -423,7 +438,41 @@ let run (vars, funcs) =
 					Sound(p, d, a) -> Sound(p,newDuration,a), env
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
-
+			| Call("setAmplitude", actuals) ->
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in if (List.length actuals != 2)
+				then raise(Failure("setAmplitude takes a sound and an iteger"))
+				else let newAmplitude = 
+					(match (List.nth actuals 1) with
+						Int(i) -> i
+						| _ -> raise (Failure ("Second argument must evaluate to an integer"))
+					)
+				in  
+				(match (List.hd actuals) with
+					Sound(p, d, a) -> Sound(p,d,newAmplitude), env
+					| _ -> raise (Failure ("First argument must be a sound"))
+				)
+			| Call("setPitch", actuals) ->
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in if (List.length actuals != 2)
+				then raise(Failure("setPitches takes a sound and a pitch array"))
+				else let newPitches = 
+					(match (List.nth actuals 1) with
+						Array(i) -> (* print_endline (string_of_expr (List.hd i)); *)
+							List.rev (List.map (fun e -> string_of_expr e) i)
+						| _ -> raise (Failure ("Second argument must be an array of pitches"))
+					)
+				in  
+				(match (List.hd actuals) with
+					Sound(p, d, a) -> Sound(newPitches,d,a), env
+					| _ -> raise (Failure ("First argument must be a sound"))
+				)
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = 
@@ -437,7 +486,7 @@ let run (vars, funcs) =
 					| Pitch(p) -> p
 					| Id(i) -> let v, _ = eval env (Id(i)) in
 								print v
-					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
+					| Sound(p,d,a) -> "|" ^ String.concat ", " (List.rev p) ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
@@ -518,6 +567,18 @@ let run (vars, funcs) =
 					| Pitch(p) -> Pitch(p), env
 					| _ -> raise (Failure ("getPitch can only be called on sounds or pitches"))
 				)
+			| Call("randomInt", [bound]) -> 
+				let v, env = eval env bound in
+				(match v with
+					  Int(i) -> Int(Random.int i), env
+					| _ -> raise (Failure ("argument must be an int"))
+				)
+			| Call("randomDouble", [bound]) ->
+				let v, env = eval env bound in
+				(match v with
+					  Double(d) -> Double(Random.float d), env
+					| _ -> raise (Failure ("argument must be a double"))
+				)
 			(* for arrays eyes only *)
 			| Call("length",[e]) -> 
 				let v, env = eval env e in
@@ -533,7 +594,6 @@ let run (vars, funcs) =
 				in
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
-						print_endline (Ast.string_of_expr actual);
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in
