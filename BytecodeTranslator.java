@@ -7,11 +7,13 @@ public class BytecodeTranslator {
 	   To run: java -cp jfugue-4.0.3.jar:. BytecodeTranslator [filename]
     ***/
 	public static void main(String[] args) {
-		if (args.length != 1){
-			System.out.println("must give a bytecode filename");
+		if (args.length != 2){
+			System.out.println("must give a bytecode filename and a midifile name");
+			System.out.println(args.length);
 			System.exit(1);
 		}
-		String fileName = args[0];
+		String byteCodeFileName = args[0];
+		String midiFileName = args[1];
 		BufferedReader br = null;
  		Player player = new Player(); 
 		Pattern p = new Pattern();
@@ -24,7 +26,7 @@ public class BytecodeTranslator {
 
 			String tempo = "T";
 			int first = 1;
-			br = new BufferedReader(new FileReader(fileName));
+			br = new BufferedReader(new FileReader(byteCodeFileName));
 			while ((currentLine = br.readLine()) != null) {
 				if(first ==1){
 					if(currentLine.charAt(0) == 'x'){
@@ -99,10 +101,9 @@ public class BytecodeTranslator {
 				}
 			}
 
-			//w, p, b
 			midiWrite = tempo + midiWrite;
 			p.add(midiWrite);
-			player.saveMidi(p, new File("music-file.mid")); 
+			player.saveMidi(p, new File(midiFileName)); 
 			player.play(p);
 		} catch (IOException e) {
 			e.printStackTrace();
