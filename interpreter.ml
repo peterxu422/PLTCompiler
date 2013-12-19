@@ -624,10 +624,11 @@ let run (vars, funcs) =
 					  let rec strings_to_pitches = function
 					  		  hd :: [] -> [Pitch(hd)]
 					  		| hd :: tl -> [Pitch(hd)] @ strings_to_pitches tl
+					  		| _ -> raise (Failure ("getPitches can only be called on sounds with pitches"))
 					  in
 					  Array(List.rev(strings_to_pitches p)), env
 					| Pitch(p) -> Pitch(p), env
-					| _ -> raise (Failure ("getPitch can only be called on sounds or pitches"))
+					| _ -> raise (Failure ("getPitches can only be called on sounds or pitches"))
 				)
 			| Call("randomInt", [bound]) -> 
 				let v, env = eval env bound in
@@ -730,7 +731,8 @@ let run (vars, funcs) =
 					in 
 					let arr, _ = eval env (Id(a)) in
 					(match arr with 
-						Array(x) -> runloop env (Int(0)) x)
+						Array(x) -> runloop env (Int(0)) x
+						| _ -> raise (Failure ("Looping on array was expected")))
 				| Return(e) ->
 				let v, (locals, globals) = eval env e in
 				raise (ReturnException(v, globals))
