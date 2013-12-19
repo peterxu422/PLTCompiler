@@ -15,11 +15,6 @@ let getType v =
 		| Array(a) -> "array"
 		| _ -> "unmatched_type"
 
-let getInt v = 
-	match v with
-		Int(v) -> v
-		| _ -> 0
-
 let getBoolean v =
 	match v with
 		Boolean(v) -> v
@@ -611,7 +606,9 @@ let run (vars, funcs) =
 								else
 									raise (Failure ("undeclared identifier " ^ v))
 						    in
-							let env = exec env s in runloop env (Int((getInt idx2)+1)) tl
+							let env = exec env s in match idx2 with
+								Int(i) -> runloop env (Int(i+1)) tl
+								| _ -> runloop env (Int(0+1)) tl
 					in 
 					let arr, _ = eval env (Id(a)) in
 					(match arr with 
