@@ -1,0 +1,132 @@
+sound[] concatFour(sound s){
+	return [s] * 4;
+}
+
+sound[] concatArrays(sound[] one, sound[] two){
+	sound[] out;
+	int i;
+	int offset;
+	offset = length(one);
+	for (i = 0; i < length(two); i = i+1){
+		one[i+offset] = two[i];
+	}
+	return one;
+}
+
+sound[] decrementSound(sound[] in, int amount){
+	int amplitude;
+	sound s;
+	int count;
+	int i;
+	count = 0;
+
+	amplitude = getAmplitude(in[0]);
+	for (i=0; i < length(in); i = i+1){
+		s = in[i];
+		s = setAmplitude(s, amplitude);
+		amplitude = amplitude - amount;
+		in[i] = s;
+	}
+	return in;
+}
+
+sound[] createQuarterNotes(sound[] in, int decAmount){
+	int i;
+	sound[] acc;
+	acc = [];
+	for (i = 0; i < length(in); i = i+1){
+		acc = concatArrays(acc, decrementSound(concatFour(in[i]), decAmount));
+	}
+	return acc;
+}
+
+void main(){
+
+	sound FM; 
+	sound CM; 
+	sound Gm7;
+	sound BbM;
+	sound C7M;
+
+	sound[] fourFs;
+	sound[] fourCs;
+	sound[] fourGm7s;
+	sound[] fourBbMs;
+	sound[] fourC7s;
+
+	sound[] melody;
+
+	sound[] chordProgression;
+	sound[] acc;
+
+	int decAmount;
+	decAmount = 15;
+
+	CM = |C5, E4, G3|:0.25:70;
+	FM = |C5, F4, A4|:0.25:70;
+	Gm7 =|G4, Bb4, D4, F4|:0.25:70;
+	BbM = |Bb4, D4, F4|:0.25:70;
+	C7M = |C4, E4, G3, Bb4|:0.25:70;
+
+	chordProgression = [FM, CM, Gm7, FM, BbM, FM, CM, FM];
+	acc = createQuarterNotes(chordProgression, 15);
+	acc = concatArrays([|C4|:1.0:0],acc);
+
+	melody = [|C4|:0.75:0, quart(C6),
+			  |A5|:0.615:100, eighth(A5),eighth(C6),eighth(D6),
+			  |G5|:0.75:100, eighth(G5), eighth(A5),
+			  quart(Bb5), |F6|:0.375:100, eighth(F6), eighth(E6),eighth(C6),
+			  eighth(D6), sixteenth(C6),sixteenth(Bb5),half(A5),|C4|:0.125:0, eighth(C6),
+			  eighth(D6), quart(D6), eighth(D6), eighth(G6), sixteenth(F6), eighth(E6),sixteenth(F6), eighth(D6),
+			  half(C6), eighth(F5), eighth(G5), eighth(A5), eighth(D6),
+			  quart(C6), |C5|:0.125:0, eighth(C6), eighth(Bb5), eighth(A5), eighth(E5), eighth(F5),
+			  |F5|:1.0:100];
+
+	// print(melody);
+	// print(acc);
+	mixdown(melody, 0);
+	mixdown(acc, 1);
+}
+
+sound quart(pitch p){
+	sound s;
+	pitch[] pArr;
+	pArr = [p];
+	s = setPitch(s, pArr);
+	s = setAmplitude(s, 100);
+	s = setDuration(s, 0.25);
+	return s;
+}
+
+sound eighth(pitch p){
+	sound s;
+	pitch[] pArr;
+	pArr = [p];
+	s = setPitch(s, [p]);
+	s = setAmplitude(s, 100);
+	s = setDuration(s, 0.125);
+	return s;
+}
+
+sound sixteenth(pitch p){
+	sound s;
+	pitch[] pArr;
+	pArr = [p];
+	s = setPitch(s, [p]);
+	s = setAmplitude(s, 100);
+	s = setDuration(s, 0.0625);
+	return s;
+}
+
+sound half(pitch p){
+	sound s;
+	pitch[] pArr;
+	pArr = [p];
+	s = setPitch(s, [p]);
+	s = setAmplitude(s, 100);
+	s = setDuration(s, 0.5);
+	return s;
+}
+
+
+
