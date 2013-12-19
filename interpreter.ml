@@ -629,15 +629,13 @@ let run (vars, funcs) =
 			| Call("bpm", actuals) -> 
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
-						(* print_endline (Ast.string_of_expr actual); *)
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in
-					if List.length actuals != 1 then raise (Failure ("One int argument must be passed to bpm"));
-					(* print_endline actuals; *)
+					if !first_mixdown_flag != false then raise (Failure ("Bpm must be set before mixdown is called to take affect"));
+					if List.length actuals != 1 then raise (Failure ("One argument must be passed to bpm"));
 					(try (int_of_string (Ast.string_of_expr (List.hd actuals))) with
 						Failure _ -> raise (Failure ("int must be passed to bpm. 40 - 300 is suggested")));
-					(* print_endline "i should not have gotten here if it broke"; it doesn't print as expected *)
 					bpm := (int_of_string (Ast.string_of_expr (List.hd actuals)));
 					Int(0), env
 			(* this does function calls. *)
