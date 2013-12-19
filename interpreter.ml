@@ -5,6 +5,8 @@ module NameMap = Map.Make(struct
 	let compare x y = Pervasives.compare x y
 end)
 
+let _ = Random.self_init()
+
 (* Returns the type of an expression v *)
 let getType v = 
 	match v with
@@ -69,15 +71,14 @@ let run (vars, funcs) =
 						Array(n) -> n
 						| _ -> raise (Failure(a ^ " is not an array. Cannot access index"))
 					in
-					match indices with
-					[] -> raise (Failure ("Error indexing array without indices"))
-					| Int(i) :: [] -> 
-					try
-						List.nth arr i, env
-					with Failure("nth") -> raise (Failure "Index out of bounds")
-					| _ -> raise (Failure "Invalid index")
+					let index, env = eval env indices in 
+					(match index with 
+						Int(i) -> try List.nth arr i, env
+							with Failure("nth") -> raise (Failure "Index out of bounds")
+						|_ -> raise (Failure "Invalid index")
+					)
 				in
-				lookup v i
+				lookup v (List.hd i)
 			| Id(var) -> 
 				let locals, globals = env in
 				if NameMap.mem var locals then
@@ -534,6 +535,18 @@ let run (vars, funcs) =
 					| Pitch(p) -> Pitch(p), env
 					| _ -> raise (Failure ("getPitch can only be called on sounds or pitches"))
 				)
+			| Call("randomInt", [bound]) -> 
+				let v, env = eval env bound in
+				(match v with
+					  Int(i) -> Int(Random.int i), env
+					| _ -> raise (Failure ("argument must be an int"))
+				)
+			| Call("randomDouble", [bound]) ->
+				let v, env = eval env bound in
+				(match v with
+					  Double(d) -> Double(Random.float d), env
+					| _ -> raise (Failure ("argument must be a double"))
+				)
 			(* for arrays eyes only *)
 			| Call("length",[e]) -> 
 				let v, env = eval env e in
@@ -549,7 +562,6 @@ let run (vars, funcs) =
 				in
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
-						print_endline (Ast.string_of_expr actual);
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in
