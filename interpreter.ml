@@ -15,7 +15,7 @@ let getType v =
 		| Boolean(v) -> "bool"
 		| Pitch(v) -> "pitch"
 		| Sound(p,d,a) -> "sound"
-		| Array(v) -> "array"
+		| Array(v::_) -> "array"
 		| _ -> "unmatched_type"
 
 (* Returns the evaluation of the boolean expression v *)
@@ -68,6 +68,15 @@ let run (vars, funcs) =
 						let v, env = eval env expr in v::values, env)
 					([], env) (List.rev e)
 				in
+				(* type check *)
+				let hd = List.hd evaledExprs in
+				let v1Type = getType hd in
+				let rec check = function
+					head::tail -> let v2Type = getType head in
+								  if v1Type = v2Type then check tail
+								  else raise (Failure(v2Type^" in an array of type "^v1Type)) 
+					| []	   -> evaledExprs
+				in check evaledExprs ;
 			 	Array(evaledExprs), env
 
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
@@ -92,43 +101,64 @@ let run (vars, funcs) =
 					(NameMap.find var globals), env
 				else raise (Failure ("undeclared identifier " ^ var))
  			| Assign(var, e) ->
-			let firstType, _  = (match var with 
-				Index(a, i) -> eval env (Index(a, [Int(0)]))
-				| _ -> var, env
-			) in
-		(*	print_endline (string_of_expr firstType);*)
 
-			let lvar = (match var with
-				Index(a, i) -> Index(a, [Int(0)])
-				| _ -> var
-			) in
+				(* unused *)
+				let firstType, _  = (match var with 
+					Index(a, i) -> eval env (Index(a, [Int(0)]))
+					| _ -> var, env
+				) in
+
+				(* for type check, use Index[0] as reference *)
+				let lvar = (match var with
+					Index(a, i) -> Index(a, [Int(0)])
+					| _ -> var
+				) in
+				
 				let v1, env = eval env lvar in
 				let v2, env = eval env e in
 				let v1Type = getType v1 in
-				let v2Type = getType e in
-			let v, (locals, globals) = eval env e in
-			(match var with
-				Id(name) ->
-				(match eval env (Id(name)) with
-					Index(a, i), _ -> eval env (Assign((Index(a,i), e)))
-					| _,_ ->
-					(* The local identifiers have already been added to ST in the first pass. 
-					Checks if it is indeed in there.*)
-					if NameMap.mem name locals then	
-						begin
-					(* Updates the var in the ST to evaluated expression e, which is stored in v. 
-					Returns v as the value because this is the l-value*)
-							if v1Type = v2Type then
-								v, (NameMap.add name v locals, globals)
-							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
-						end
-					else if NameMap.mem name globals then
-						begin
-							if v1Type = v2Type then
-								v, (locals, NameMap.add name v globals)
-							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
-						end
-					else raise (Failure ("undeclared identifier " ^ name))
+				let v2Type = getType v2 in
+				
+				let v, (locals, globals) = eval env e in
+				(match var with
+					Id(name) ->
+					(match eval env (Id(name)) with
+						Index(a, i), _ -> eval env (Assign((Index(a,i), e)))
+						| _,_ ->
+
+						(* The local identifiers have already been added to ST in the first pass. 
+						Checks if it is indeed in there.*)
+						if NameMap.mem name locals then	
+							begin
+								let v1Type2 = if v1Type = "array" then
+									(getType (match v1 with Array(v::_) -> v))
+								else v1Type in
+								let v2Type2 = if v2Type = "array" then
+									(getType (match v2 with Array(v::_) -> v))
+								else v2Type in
+						
+								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
+								Returns v as the value because this is the l-value*)
+								if v1Type2 = v2Type2 then
+									v, (NameMap.add name v locals, globals)
+								else raise(Failure ("type mismatch: "^v1Type2^" with "^v2Type2))
+							end
+						else if NameMap.mem name globals then
+							begin
+								let v1Type2 = if v1Type = "array" then
+									(getType (match v1 with Array(v::_) -> v))
+								else v1Type in
+								let v2Type2 = if v2Type = "array" then
+									(getType (match v2 with Array(v::_) -> v))
+								else v2Type in
+						
+								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
+								Returns v as the value because this is the l-value*)
+								if v1Type2 = v2Type2 then
+									v, (locals, NameMap.add name v globals)
+								else raise(Failure ("type mismatch: "^v1Type2^" with "^v2Type2))
+							end
+						else raise (Failure ("undeclared identifier " ^ name))
 				)
 				| Index(name, indices) -> 
 					let rec getIndex e = 
