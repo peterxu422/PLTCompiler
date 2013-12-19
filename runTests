@@ -27,6 +27,8 @@ end
 `rm *.cmi > /dev/null 2>&1`
 `ocamllex scanner.mll #{supress_string}`
 `ocamlyacc parser.mly #{supress_string}`
+`ocamlc -i ast.ml > ast.mli`
+`ocamlc -c ast.mli #{supress_string}`
 `ocamlc -c ast.ml #{supress_string}`
 `ocamlc -c parser.mli #{supress_string}`
 `ocamlc -c scanner.ml #{supress_string}`
