@@ -7,6 +7,7 @@ end)
 
 let _ = Random.self_init()
 
+(* Returns the type of an expression v *)
 let getType v = 
 	match v with
 		Int(v) -> "int"
@@ -17,18 +18,15 @@ let getType v =
 		| Array(v) -> "array"
 		| _ -> "unmatched_type"
 
-let getInt v = 
-	match v with
-		Int(v) -> v
-		| _ -> 0
-
+(* Returns the evaluation of the boolean expression v *)
 let getBoolean v =
 	match v with
-		Boolean(v) -> v
+		Boolean(a) -> a
 		| _ -> false
 
 exception ReturnException of expr * expr NameMap.t
 
+(* Sets the default initialization value for a given type t *)
 let initType t = 
   match t with
     "int" -> Int(0)
@@ -234,31 +232,30 @@ let run (vars, funcs) =
 							match i with
 								1 -> ls
 								| _ -> ls @ (buildList ls (i-1))
-						in
-						(match v1 with
-							Int(i1) -> (match v2 with
-								Array(a) -> Array (buildList a i1)
-								| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
-								| Double(d2) -> Double (float_of_int i1 *. d2)
-								| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
-								| Int(i2) -> Int (i1 * i2)
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							| Double(d1) -> (match v2 with
-								Sound(p,d,a) -> Sound(p,d1 *. d, a)
-								| Int(i2) -> Double (d1 *. float_of_int i2)
-								| Double(d2) -> Double (d1 *. d2)
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							| Pitch(p1) -> (match v2 with
-								Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							| Sound(p,d,a) -> (match v2 with
-								Int(i2) -> Sound(p,d *. float_of_int i2,a)
-								| Double(d2) -> Sound(p,d *. d2,a)
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-							| Array(a) -> (match v2 with
-								Int(i2) -> Array (buildList a i2)
-								| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-						  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						in (match v1 with
+						Int(i1) -> (match v2 with
+							Array(a) -> Array (buildList a i1)
+							| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
+							| Double(d2) -> Double (float_of_int i1 *. d2)
+							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
+							| Int(i2) -> Int (i1 * i2)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Double(d1) -> (match v2 with
+							Sound(p,d,a) -> Sound(p,d1 *. d, a)
+							| Int(i2) -> Double (d1 *. float_of_int i2)
+							| Double(d2) -> Double (d1 *. d2)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Pitch(p1) -> (match v2 with
+							Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Sound(p,d,a) -> (match v2 with
+							Int(i2) -> Sound(p,d *. float_of_int i2,a)
+							| Double(d2) -> Sound(p,d *. d2,a)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Array(a) -> (match v2 with
+							Int(i2) -> Array (buildList a i2)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
 					| Div -> (match v1 with
 						Int(i1) -> (match v2 with
@@ -657,7 +654,9 @@ let run (vars, funcs) =
 								else
 									raise (Failure ("undeclared identifier " ^ v))
 						    in
-							let env = exec env s in runloop env (Int((getInt idx2)+1)) tl
+							let env = exec env s in match idx2 with
+								Int(i) -> runloop env (Int(i+1)) tl
+								| _ -> runloop env (Int(0+1)) tl
 					in 
 					let arr, _ = eval env (Id(a)) in
 					(match arr with 

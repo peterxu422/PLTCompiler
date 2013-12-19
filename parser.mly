@@ -8,7 +8,7 @@ let parse_error s = (* Called by the parser function on error *)
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA COLON PIPE
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
-%token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG CARROT
+%token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG
 %token OR AND EQ NEQ LT GT LEQ GEQ
 %token RETURN IF ELSE FOR WHILE LOOP
 
@@ -32,7 +32,6 @@ let parse_error s = (* Called by the parser function on error *)
 %left TIMES DIVIDE
 %left PERCENT
 %left NOT NEG
-%left CARROT
 
 %start program
 %type <Ast.program> program
@@ -114,7 +113,6 @@ expr:
 	| expr PERCENT expr					{ Binop($1, Mod, $3) }
 	| NOT expr							{ Not($2) }
 	| MINUS expr						{ Neg($2) }
-	| expr CARROT						{ Tie($1) }
 	| expr OR expr						{ Binop($1, Or, $3) }
 	| expr AND expr						{ Binop($1, And, $3) }
 	| expr EQ expr						{ Binop($1, Eq, $3) }

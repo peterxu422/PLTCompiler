@@ -15,7 +15,6 @@ type expr =
 	| Binop of expr * op * expr
 	| Not of expr
 	| Neg of expr
-	| Tie of expr
 
 type stmt =
 	  Block of stmt list
@@ -80,7 +79,6 @@ let rec string_of_expr = function
 			) ^ " " ^ string_of_expr e2
 	| Not(e) -> "!" ^ (string_of_expr e)
 	| Neg(e) -> "-" ^ (string_of_expr e)
-	| Tie(e) -> (string_of_expr e) ^ "^"
 
 
 let rec string_of_stmt = function
@@ -147,7 +145,6 @@ let rec string_of_expr = function
 			Not			-> "!"
 		|	Neg			-> "-")
 		^ string_of_expr e
-	| Tie(e) -> (string_of_expr e) ^ "^"
 
 let rec string_of_stmt = function
 	Block(stmts) ->

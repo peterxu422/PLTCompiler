@@ -33,7 +33,6 @@ rule token = parse
 | '/'       { DIVIDE }
 | '%'	    { PERCENT }	
 | '!'       { NOT }
-| '^'       { CARROT }
 | "||"	    { OR }
 | "&&"	    { AND }
 | "=="      { EQ }				
