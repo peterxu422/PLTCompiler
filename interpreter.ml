@@ -76,15 +76,14 @@ let run (vars, funcs) =
 						Array(n) -> n
 						| _ -> raise (Failure(a ^ " is not an array. Cannot access index"))
 					in
-					match indices with
-					[] -> raise (Failure ("Error indexing array without indices"))
-					| Int(i) :: [] -> 
-					try
-						List.nth arr i, env
-					with Failure("nth") -> raise (Failure "Index out of bounds")
-					| _ -> raise (Failure "Invalid index")
+					let index, env = eval env indices in 
+					(match index with 
+						Int(i) -> try List.nth arr i, env
+							with Failure("nth") -> raise (Failure "Index out of bounds")
+						|_ -> raise (Failure "Invalid index")
+					)
 				in
-				lookup v i
+				lookup v (List.hd i)
 			| Id(var) -> 
 				let locals, globals = env in
 				if NameMap.mem var locals then
