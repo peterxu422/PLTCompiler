@@ -27,7 +27,7 @@ void main(){
 	print(length(one));
 	print(length(two));
 	print(length(three));
-	print(length([]));
+//	print(length([]));
 
 	a = setDuration(a, 2.5+2.5);
 	print(getDuration(a));
