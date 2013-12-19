@@ -188,6 +188,7 @@ let run (vars, funcs) =
 										(initType v2Type))) 
 							in 
 									arr.(idx) <- v; Array.to_list arr
+						| _ -> raise (Failure ("Cannot assign to this array"))
 					in
 					if NameMap.mem name locals then
 						begin
@@ -525,9 +526,12 @@ let run (vars, funcs) =
 					| Id(i) -> let v, _ = eval env (Id(i)) in
 								print v
 					| Sound(p,d,a) -> "|" ^ String.concat ", " (List.rev p) ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
-					| Array(a) -> "[" ^ build a ^ "]" and build = function
+					| Array(a) -> let rec build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
+							| _ -> raise (Failure ("Item cannot be printed"))
+						in
+						"[" ^ build a ^ "]"
 					| _ -> raise (Failure ("Item cannot be printed"))
 				in
 					print_endline (print v);
