@@ -105,10 +105,10 @@ let run (vars, funcs) =
  			| Assign(var, e) ->
 
 				(* unused *)
-				let firstType, _  = (match var with 
+(*				let firstType, _  = (match var with 
 					Index(a, i) -> eval env (Index(a, [Int(0)]))
 					| _ -> var, env
-				) in
+				) in *)
 
 				(* for type check, use Index[0] as reference *)
 				let lvar = (match var with
@@ -132,13 +132,15 @@ let run (vars, funcs) =
 						Checks if it is indeed in there.*)
 						if NameMap.mem name locals then	
 							begin
-								(*if array, check the type of its elements instead*)
-								let v1Type2 = (match v1 with
-									Array(v::_) -> getType(v)
-									| _ -> v1Type) in
-								let v2Type2 = (match v2 with 
-									Array(v::_) -> getType(v)
-									| _ -> v2Type) in
+								(* if both are arrays, check the type of its elements instead *)
+								let v1Type2 = if v1Type = "array" && v2Type = "array" then
+									(getType (match v1 with Array(v::_) -> v
+															| _ -> v1))
+								else v1Type in
+								let v2Type2 = if v2Type = "array" && v1Type = "array" then
+									(getType (match v2 with Array(v::_) -> v
+															| _ -> v2))
+								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
 								Returns v as the value because this is the l-value*)
@@ -148,11 +150,14 @@ let run (vars, funcs) =
 							end
 						else if NameMap.mem name globals then
 							begin
-								let v1Type2 = if v1Type = "array" then
-									(getType (match v1 with Array(v::_) -> v))
+								(* if both are arrays, check the type of its elements instead *)
+								let v1Type2 = if v1Type = "array" && v2Type = "array" then
+									(getType (match v1 with Array(v::_) -> v
+															| _ -> v1))
 								else v1Type in
-								let v2Type2 = if v2Type = "array" then
-									(getType (match v2 with Array(v::_) -> v))
+								let v2Type2 = if v2Type = "array" && v1Type = "array" then
+									(getType (match v2 with Array(v::_) -> v
+															| _ -> v2))
 								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
