@@ -70,6 +70,9 @@ let run (vars, funcs) =
 					([], env) (List.rev e)
 				in
 				(* type check *)
+				(* make sure array isn't empty *)
+				if evaledExprs = [] then raise (Failure("Cannot initialize empty array"))
+				else
 				(* traverse through the array, make sure every element in the array is the same*)
 				let hd = List.hd evaledExprs in
 				let v1Type = getType hd in
@@ -150,7 +153,6 @@ let run (vars, funcs) =
 							end
 						else if NameMap.mem name globals then
 							begin
-<<<<<<< HEAD
 								(* if both are arrays, check the type of its elements instead *)
 								let v1Type2 = if v1Type = "array" && v2Type = "array" then
 									(getType (match v1 with Array(v::_) -> v
