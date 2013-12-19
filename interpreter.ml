@@ -51,7 +51,8 @@ let initType t =
     | _ -> Boolean(false)
 
 (* global mixdown flag to see if mixdown has been called in which case we should append, not re write a file *)
-let mixdown_flag = ref false;;
+let first_mixdown_flag = ref false;;
+let bpm = ref 220;;
 
 let run (vars, funcs) =
 	(* Put function declarations in a symbol table *)
@@ -445,9 +446,10 @@ let run (vars, funcs) =
 							| hd :: tl -> ((writeByteCode hd) ^ "," ^ (build tl))
 					| _ -> raise (Failure ("Item cannot be mixdown"))
 				in 
-					if !mixdown_flag = false then
+					if !first_mixdown_flag = false then
 						begin
 							let oc = open_out file in
+								fprintf oc "%s\n" (string_of_int !bpm);
 								fprintf oc "%s\n" (!track_number ^ (writeByteCode (List.hd actuals)));
 								close_out oc
 						end 
@@ -458,7 +460,7 @@ let run (vars, funcs) =
 								close_out oc
 						end;
 					print_endline ("Mixing down track " ^ !track_number);
-					mixdown_flag := true;
+					first_mixdown_flag := true;
 					Int(0), env
 			(* for pitches and sounds *)
 			| Call("getAmplitude", [e]) ->
@@ -494,6 +496,21 @@ let run (vars, funcs) =
 					  Array(a) -> Int(List.length a), env
 					| _ -> raise (Failure ("Length can only be called on arrays"))
 				)
+			(* sets the bpm *)
+			| Call("bpm", actuals) -> 
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+						(* print_endline (Ast.string_of_expr actual); *)
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in
+					if List.length actuals != 1 then raise (Failure ("One int argument must be passed to bpm"));
+					(* print_endline actuals; *)
+					(try (int_of_string (Ast.string_of_expr (List.hd actuals))) with
+						Failure _ -> raise (Failure ("int must be passed to bpm. 40 - 300 is suggested")));
+					(* print_endline "i should not have gotten here if it broke"; it doesn't print as expected *)
+					bpm := (int_of_string (Ast.string_of_expr (List.hd actuals)));
+					Int(0), env
 			(* this does function calls. *)
 			| Call(f, actuals) -> 
 				let fdecl =

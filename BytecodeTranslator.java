@@ -3,7 +3,6 @@ import org.jfugue.*;
  
 public class BytecodeTranslator {
 	/*** 
-	Andrew is not that cool
 	   To compile: javac -classpath ./jfugue-4.0.3.jar BytecodeTranslator.java
 	   To run: java -cp jfugue-4.0.3.jar:. BytecodeTranslator [filename]
     ***/
@@ -21,13 +20,19 @@ public class BytecodeTranslator {
 		String[] tracks = new String[16];
 		String[] mixDownWrites;
 
-		String test = "";
-
 		try {
 
+			//String tempo = "T220 ";
+			String tempo = "T";
+			int first = 1;
 			br = new BufferedReader(new FileReader(fileName));
 			while ((currentLine = br.readLine()) != null) {
-				byteCode += currentLine.charAt(0) + currentLine.substring(2, currentLine.length()-1) + "\n";	
+				if(first ==1){
+					tempo = tempo + currentLine + " ";
+				} else {
+					byteCode += currentLine.charAt(0) + currentLine.substring(2, currentLine.length()-1) + "\n";	
+				}
+				first --;
 			}
 
 			mixDownWrites = byteCode.split("\n");
@@ -40,6 +45,8 @@ public class BytecodeTranslator {
 					tracks[trackNum] += mixDownWrites[i].substring(1);
 				}
 			}
+
+			String midiWrite = "";
 
 			for (int i=0;i<tracks.length;i++){
 				if(tracks[i] != null){
@@ -79,11 +86,12 @@ public class BytecodeTranslator {
 					}
 					chord = chord.substring(0, chord.length()-1);
 					track += chord;
-					test += track;
-					p.add(track);
+					midiWrite += track;
 				}
 			}
 
+			midiWrite = tempo + midiWrite;
+			p.add(midiWrite);
 			player.saveMidi(p, new File("music-file.mid")); 
 			player.play(p);
 		} catch (IOException e) {
