@@ -78,6 +78,9 @@ let run (vars, funcs) =
 					([], env) (List.rev e)
 				in
 				(* type check *)
+				(* make sure array isn't empty *)
+				if evaledExprs = [] then raise (Failure("Cannot initialize empty array"))
+				else
 				(* traverse through the array, make sure every element in the array is the same*)
 				let hd = List.hd evaledExprs in
 				let v1Type = getType hd in
@@ -97,9 +100,9 @@ let run (vars, funcs) =
 					in
 					let index, env = eval env indices in 
 					(match index with 
-						Int(i) -> try List.nth arr i, env
-							with Failure("nth") -> raise (Failure "Index out of bounds")
-						|_ -> raise (Failure "Invalid index")
+						Int(i) -> (try List.nth arr i, env
+							with Failure("nth") -> raise (Failure "Index out of bounds"))
+						| _ -> raise (Failure "Invalid index")
 					)
 				in
 				lookup v (List.hd i)
@@ -113,10 +116,10 @@ let run (vars, funcs) =
  			| Assign(var, e) ->
 
 				(* unused *)
-				let firstType, _  = (match var with 
+(*				let firstType, _  = (match var with 
 					Index(a, i) -> eval env (Index(a, [Int(0)]))
 					| _ -> var, env
-				) in
+				) in *)
 
 				(* for type check, use Index[0] as reference *)
 				let lvar = (match var with
@@ -140,12 +143,14 @@ let run (vars, funcs) =
 						Checks if it is indeed in there.*)
 						if NameMap.mem name locals then	
 							begin
-								(*if array, check the type of its elements instead*)
-								let v1Type2 = if v1Type = "array" then
-									(getType (match v1 with Array(v::_) -> v))
+								(* if both are arrays, check the type of its elements instead *)
+								let v1Type2 = if v1Type = "array" && v2Type = "array" then
+									(getType (match v1 with Array(v::_) -> v
+															| _ -> v1))
 								else v1Type in
-								let v2Type2 = if v2Type = "array" then
-									(getType (match v2 with Array(v::_) -> v))
+								let v2Type2 = if v2Type = "array" && v1Type = "array" then
+									(getType (match v2 with Array(v::_) -> v
+															| _ -> v2))
 								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
@@ -156,11 +161,14 @@ let run (vars, funcs) =
 							end
 						else if NameMap.mem name globals then
 							begin
-								let v1Type2 = if v1Type = "array" then
-									(getType (match v1 with Array(v::_) -> v))
+								(* if both are arrays, check the type of its elements instead *)
+								let v1Type2 = if v1Type = "array" && v2Type = "array" then
+									(getType (match v1 with Array(v::_) -> v
+															| _ -> v1))
 								else v1Type in
-								let v2Type2 = if v2Type = "array" then
-									(getType (match v2 with Array(v::_) -> v))
+								let v2Type2 = if v2Type = "array" && v1Type = "array" then
+									(getType (match v2 with Array(v::_) -> v
+															| _ -> v2))
 								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 

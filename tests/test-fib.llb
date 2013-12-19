@@ -1,0 +1,36 @@
+int fib (int n){
+	if (n <= 2){
+		return 1;
+	} else {
+		return fib(n - 1) + fib(n - 2);
+	}
+}
+
+
+sound[] offsetFib(pitch p){
+	int offset;
+	sound[] accumulator;
+	sound s;
+	int i;
+
+	s = setAmplitude(s, 75);
+	s = setDuration(s, 0.25);
+
+	for (i = 1; i < 11; i = i + 1){
+		offset = fib(i);
+		s = setPitches(s, [p + offset]);
+		accumulator[i-1] = s;
+	}
+
+	return accumulator;
+}
+
+void main(){
+	pitch pitchC2;
+	sound[] fibScale;
+
+	pitchC2 = C2;
+	fibScale = offsetFib(pitchC2);
+	print(fibScale);
+	mixdown(fibScale);
+}

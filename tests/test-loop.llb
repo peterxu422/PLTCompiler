@@ -2,7 +2,7 @@ void main() {
 	sound c;
 	sound d;
 	sound e;
-	sound scale;
+	sound[] scale;
 	sound s;
 	
 	c = |C1|:0.25:100;
