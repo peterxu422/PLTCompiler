@@ -11,18 +11,16 @@ sound[] concatArrays(sound[] one, sound[] two){
 
 sound[] randomBluesWalk(pitch p, int n, double d){
 	sound[] acc;
-	sound[] blues;
+	int[] blues;
 	sound s;
 	int i;
 	int r;
 	pitch newPitch;
-	acc = [];
 
 	s = setPitches(s, [p]);
 	s = setDuration(s, d);
 	s = setAmplitude(s, 75);
 
-	acc = [];
 	blues = [0, 3, 5, 6, 7, 10];
 
 	for (i = 0; i < n; i = i + 1){
@@ -34,26 +32,79 @@ sound[] randomBluesWalk(pitch p, int n, double d){
 	return acc;
 }
 
+sound[] staccato(sound[] s){
+	double initDur; 
+	double finalDur;
+	double restTime;
+	sound rest;
+	sound note;
+	int i;
+	int outCount;
+	sound[] out;
+
+	for (i = 0; i < length(s); i = i+1){
+		initDur = getDuration(s[i]);
+		finalDur = initDur*0.1;
+		restTime = initDur - finalDur;
+
+		s[i] = setDuration(s[i], finalDur);
+		rest = setDuration(rest, restTime);		
+		out[outCount] = s[i];
+		out[outCount+1] = rest;
+		outCount = outCount +2;
+	}
+
+
+
+	// print(s);
+	// print(rest);
+	print(out);
+	return out;
+}
+
+
+
 void main (){
 	sound[] a;
 	sound C7M;
 	sound FM;
 	sound[] FthenC;
+	sound[] high;
+	sound[] low;
+	sound[] acc;
 
-	FM = |F4, A4, C5|:2.0:70;
-	C7M = |C3, G4, C5|:0.25:70;
-	FthenC = concatArrays([FM], [C7M]*8);
-	print(FthenC);
+	bpm(100);
+
+	high = [|C6|:0.125:100, |G6|:0.125:100, |Bb6|:0.125:100];
+	low = [|C3|:0.125:100, |G3|:0.125:100, |Bb2|:0.125:100];
+	high = staccato(high);
+	acc = concatArrays(acc, low);
+	acc = concatArrays(acc, low);
+	acc = concatArrays(acc, high);
+	acc = concatArrays(acc, high);
+	acc = concatArrays(acc, low);
+	acc = concatArrays(acc, low);
+	acc = concatArrays(acc, high);
+	acc = concatArrays(acc, high);
+
+	FM = |F5, A5, C5|:1.0:50;
+	C7M = |C3, G4|:0.25:50;
+	FthenC = concatArrays([FM]*2, [C7M]*8);
+	// print(FthenC);
+	// mixdown(acc);
 	mixdown(FthenC*2, 0);
+	
 
 
-	a = randomBluesWalk(C5, 8, 0.25);
+	a = randomBluesWalk(C3, 8, 0.25);
 	a = concatArrays(a, randomBluesWalk(C5, 16, 0.125));
+	a = concatArrays(a, randomBluesWalk(C3, 8, 0.25));
 	a = concatArrays(a, randomBluesWalk(C5, 8, 0.25));
-	a = concatArrays(a, randomBluesWalk(C5, 16, 0.125));
+	a = concatArrays(a, staccato(randomBluesWalk(C5, 8, 0.25)));
 
 
 
-	print(a);
+
+	// print(a);
 	mixdown(a, 1);
 }
