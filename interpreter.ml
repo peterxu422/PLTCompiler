@@ -69,6 +69,7 @@ let run (vars, funcs) =
 					([], env) (List.rev e)
 				in
 				(* type check *)
+				(* traverse through the array, make sure every element in the array is the same*)
 				let hd = List.hd evaledExprs in
 				let v1Type = getType hd in
 				let rec check = function
@@ -130,6 +131,7 @@ let run (vars, funcs) =
 						Checks if it is indeed in there.*)
 						if NameMap.mem name locals then	
 							begin
+								(*if array, check the type of its elements instead*)
 								let v1Type2 = if v1Type = "array" then
 									(getType (match v1 with Array(v::_) -> v))
 								else v1Type in
