@@ -3,7 +3,7 @@ import org.jfugue.*;
  
 public class BytecodeTranslator {
 	/*** 
-	Andrew is not that cool
+	Fixing your stuff again
 	   To compile: javac -classpath ./jfugue-4.0.3.jar BytecodeTranslator.java
 	   To run: java -cp jfugue-4.0.3.jar:. BytecodeTranslator [filename]
     ***/
@@ -77,7 +77,13 @@ public class BytecodeTranslator {
 						}
 							chord += chords[chords.length-1].substring(0, chords[chords.length-1].length()-1) + "/" + durr + "a" + amp + " ";
 					}
-					chord = chord.substring(0, chord.length()-1);
+					try {
+						chord = chord.substring(0, chord.length()-1);	
+					} catch (StringIndexOutOfBoundsException e){
+						System.out.println("Mixdown must be called on an array of sounds");
+						System.exit(1);
+					}
+					
 					track += chord;
 					test += track;
 					p.add(track);

@@ -569,7 +569,6 @@ let run (vars, funcs) =
 				in
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
-						print_endline (Ast.string_of_expr actual);
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in
