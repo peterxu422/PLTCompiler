@@ -582,6 +582,7 @@ let run (vars, funcs) =
 					| Array(a) -> let rec build = function
 							hd :: [] -> (writeByteCode hd)
 							| hd :: tl -> ((writeByteCode hd) ^ "," ^ (build tl))
+							| _  -> raise (Failure ("invalid array format"))
 						in 
 						"[" ^ build a ^ "]" 
 					| _ -> raise (stopMixDown(); Failure ("argument cannot be mixdown"))
