@@ -1,0 +1,59 @@
+sound[] concatArrays(sound[] one, sound[] two){
+	sound[] out;
+	int i;
+	int offset;
+	offset = length(one);
+	for (i = 0; i < length(two); i = i+1){
+		one[i+offset] = two[i];
+	}
+	return one;
+}
+
+sound[] randomBluesWalk(pitch p, int n, double d){
+	sound[] acc;
+	sound[] blues;
+	sound s;
+	int i;
+	int r;
+	pitch newPitch;
+	acc = [];
+
+	s = setPitches(s, [p]);
+	s = setDuration(s, d);
+	s = setAmplitude(s, 75);
+
+	acc = [];
+	blues = [0, 3, 5, 6, 7, 10];
+
+	for (i = 0; i < n; i = i + 1){
+		r = randomInt(4);
+		newPitch = p + blues[r];
+		s = setPitches(s, [newPitch]);
+		acc[i] = s;
+	}
+	return acc;
+}
+
+void main (){
+	sound[] a;
+	sound C7M;
+	sound FM;
+	sound[] FthenC;
+
+	FM = |F4, A4, C5|:2.0:70;
+	C7M = |C3, G4, C5|:0.25:70;
+	FthenC = concatArrays([FM], [C7M]*8);
+	print(FthenC);
+	mixdown(FthenC*2, 0);
+
+
+	a = randomBluesWalk(C5, 8, 0.25);
+	a = concatArrays(a, randomBluesWalk(C5, 16, 0.125));
+	a = concatArrays(a, randomBluesWalk(C5, 8, 0.25));
+	a = concatArrays(a, randomBluesWalk(C5, 16, 0.125));
+
+
+
+	print(a);
+	mixdown(a, 1);
+}

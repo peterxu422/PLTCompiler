@@ -5,6 +5,9 @@ module NameMap = Map.Make(struct
 	let compare x y = Pervasives.compare x y
 end)
 
+let _ = Random.self_init()
+
+(* Returns the type of an expression v *)
 let getType v = 
 	match v with
 		Int(v) -> "int"
@@ -12,35 +15,18 @@ let getType v =
 		| Boolean(v) -> "bool"
 		| Pitch(v) -> "pitch"
 		| Sound(p,d,a) -> "sound"
+		| Array(v::_) -> "array"
 		| _ -> "unmatched_type"
 
-let getInt v = 
-	match v with
-		Int(v) -> v
-		| _ -> 0
-
-let getDouble v =
-	match v with
-		Double(v) -> v
-		| _ -> 0.0
-
+(* Returns the evaluation of the boolean expression v *)
 let getBoolean v =
 	match v with
-		Boolean(v) -> v
+		Boolean(a) -> a
 		| _ -> false
-
-let getPitch v =
-	match v with
-		Pitch(v) -> v
-		| _ -> "C0"
-
-let getSound v =
-	match v with
-		Sound(p,d,a) -> (p,d,a)
-		| _ -> (["C0"], 0., 0)
 
 exception ReturnException of expr * expr NameMap.t
 
+(* Sets the default initialization value for a given type t *)
 let initType t = 
   match t with
     "int" -> Int(0)
@@ -48,6 +34,11 @@ let initType t =
     | "bool" -> Boolean(false)
     | "pitch" -> Pitch("C0")
     | "sound" -> Sound((["C0"], 0., 0))
+	| "intArr" -> Array([Int(0)])
+	| "doubleArr" -> Array([Double(0.0)])
+	| "booleanArr" -> Array([Boolean(false)])
+	| "pitchArr" -> Array([Pitch("C0")])
+	| "soundArr" -> Array([Sound(["C0"], 0., 0)])
     | _ -> Boolean(false)
 
 (* global mixdown flag to see if mixdown has been called in which case we should append, not re write a file *)
@@ -70,21 +61,40 @@ let run (vars, funcs) =
 			| Boolean(b) -> Boolean(b), env
 			| Pitch(p) -> Pitch(p), env
 			| Sound(p,d,a) -> Sound(p,d,a), env
+
+			(* Arrays *)
+			| Array(e) -> 
+				let evaledExprs, env = List.fold_left
+					(fun (values, env) expr ->
+						let v, env = eval env expr in v::values, env)
+					([], env) (List.rev e)
+				in
+				(* type check *)
+				(* traverse through the array, make sure every element in the array is the same*)
+				let hd = List.hd evaledExprs in
+				let v1Type = getType hd in
+				let rec check = function
+					head::tail -> let v2Type = getType head in
+								  if v1Type = v2Type then check tail
+								  else raise (Failure(v2Type^" in an array of type "^v1Type)) 
+					| []	   -> evaledExprs
+				in check evaledExprs ;
+			 	Array(evaledExprs), env
+
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
 				let rec lookup arr indices =
 					let arr = match arr with
 						Array(n) -> n
 						| _ -> raise (Failure(a ^ " is not an array. Cannot access index"))
 					in
-					match indices with
-					[] -> raise (Failure ("Error indexing array without indices"))
-					| Int(i) :: [] -> 
-					try
-						List.nth arr i, env
-					with Failure("nth") -> raise (Failure "Index out of bounds")
-					| _ -> raise (Failure "Invalid index")
+					let index, env = eval env indices in 
+					(match index with 
+						Int(i) -> try List.nth arr i, env
+							with Failure("nth") -> raise (Failure "Index out of bounds")
+						|_ -> raise (Failure "Invalid index")
+					)
 				in
-				lookup v i
+				lookup v (List.hd i)
 			| Id(var) -> 
 				let locals, globals = env in
 				if NameMap.mem var locals then
@@ -93,21 +103,65 @@ let run (vars, funcs) =
 					(NameMap.find var globals), env
 				else raise (Failure ("undeclared identifier " ^ var))
  			| Assign(var, e) ->
-			let v, (locals, globals) = eval env e in
-			(match var with
-				Id(name) ->
-				(match eval env (Id(name)) with
-					Index(a, i), _ -> eval env (Assign((Index(a,i), e)))
-					| _,_ ->
-					(* The local identifiers have already been added to ST in the first pass. 
-					Checks if it is indeed in there.*)
-					if NameMap.mem name locals then	
-					(* Updates the var in the ST to evaluated expression e, which is stored in v. 
-					Returns v as the value because this is the l-value*)
-						v, (NameMap.add name v locals, globals) 
-					else if NameMap.mem name globals then
-						v, (locals, NameMap.add name v globals)
-					else raise (Failure ("undeclared identifier " ^ name))
+
+				(* unused *)
+				let firstType, _  = (match var with 
+					Index(a, i) -> eval env (Index(a, [Int(0)]))
+					| _ -> var, env
+				) in
+
+				(* for type check, use Index[0] as reference *)
+				let lvar = (match var with
+					Index(a, i) -> Index(a, [Int(0)])
+					| _ -> var
+				) in
+				
+				let v1, env = eval env lvar in
+				let v2, env = eval env e in
+				let v1Type = getType v1 in
+				let v2Type = getType v2 in
+				
+				let v, (locals, globals) = eval env e in
+				(match var with
+					Id(name) ->
+					(match eval env (Id(name)) with
+						Index(a, i), _ -> eval env (Assign((Index(a,i), e)))
+						| _,_ ->
+
+						(* The local identifiers have already been added to ST in the first pass. 
+						Checks if it is indeed in there.*)
+						if NameMap.mem name locals then	
+							begin
+								(*if array, check the type of its elements instead*)
+								let v1Type2 = if v1Type = "array" then
+									(getType (match v1 with Array(v::_) -> v))
+								else v1Type in
+								let v2Type2 = if v2Type = "array" then
+									(getType (match v2 with Array(v::_) -> v))
+								else v2Type in
+						
+								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
+								Returns v as the value because this is the l-value*)
+								if v1Type2 = v2Type2 then
+									v, (NameMap.add name v locals, globals)
+								else raise(Failure ("type mismatch: "^v1Type2^" with "^v2Type2))
+							end
+						else if NameMap.mem name globals then
+							begin
+								let v1Type2 = if v1Type = "array" then
+									(getType (match v1 with Array(v::_) -> v))
+								else v1Type in
+								let v2Type2 = if v2Type = "array" then
+									(getType (match v2 with Array(v::_) -> v))
+								else v2Type in
+						
+								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
+								Returns v as the value because this is the l-value*)
+								if v1Type2 = v2Type2 then
+									v, (locals, NameMap.add name v globals)
+								else raise(Failure ("type mismatch: "^v1Type2^" with "^v2Type2))
+							end
+						else raise (Failure ("undeclared identifier " ^ name))
 				)
 				| Index(name, indices) -> 
 					let rec getIndex e = 
@@ -126,28 +180,37 @@ let run (vars, funcs) =
 							if idx < (List.length exprs) then
 								let arr = (Array.of_list exprs) in arr.(idx) <- v; Array.to_list arr
 							else
-
 								(* TODO: have this init with the initType of the array *)
 								let arr = 
 								(Array.append 
 									(Array.of_list exprs) 
 									(Array.make (1+idx-(List.length exprs)) 
-										(initType (getType (v))))) 
-								in 
+										(initType v2Type))) 
+							in 
 									arr.(idx) <- v; Array.to_list arr
 					in
 					if NameMap.mem name locals then
-						let exprList = (match (NameMap.find name locals) with
-							Array(a) -> a
-							| _ -> raise (Failure (name ^ " is not an array"))) in
-						let newArray = Array(setElt exprList indices) in
-						v, (NameMap.add name newArray locals, globals)
+						begin
+							let exprList = (match (NameMap.find name locals) with
+								Array(a) -> a
+								| _ -> raise (Failure (name ^ " is not an array"))) in
+							let newArray = Array(setElt exprList indices) in
+							
+							if v1Type = v2Type then
+								v, (NameMap.add name newArray locals, globals)
+							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
+						end
 					else if (NameMap.mem name globals) then
-						let exprList = (match (NameMap.find name locals) with
-							Array(a) -> a
-							| _ -> raise (Failure (name ^ " is not an array"))) in
-						let newArray = Array(setElt exprList indices) in
-						v, (locals, NameMap.add name newArray globals)
+						begin
+							let exprList = (match (NameMap.find name globals) with
+								Array(a) -> a
+								| _ -> raise (Failure (name ^ " is not an array"))) in
+							let newArray = Array(setElt exprList indices) in
+	
+							if v1Type = v2Type then
+								v, (locals, NameMap.add name newArray globals)
+							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
+						end
 					else
 						raise (Failure (name ^ " was not properly initialized as an array"))
 			| _ -> raise (Failure ("Can only assign variables or array indices")))
@@ -196,10 +259,17 @@ let run (vars, funcs) =
 							| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 						| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 					(* v1 * v2 *)
-					| Mult -> (match v1 with
+					| Mult ->
+						(* Used for the array * int and int * array operations *)
+						let rec buildList ls i =
+							match i with
+								1 -> ls
+								| _ -> ls @ (buildList ls (i-1))
+						in (match v1 with
 						Int(i1) -> (match v2 with
-							Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
-							| Double(d2) -> Double (float_of_int i1 *. getDouble v2)
+							Array(a) -> Array (buildList a i1)
+							| Sound(p,d,a) -> Sound (p,float_of_int i1 *. d, a)
+							| Double(d2) -> Double (float_of_int i1 *. d2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
 							| Int(i2) -> Int (i1 * i2)
 							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
@@ -214,6 +284,9 @@ let run (vars, funcs) =
 						| Sound(p,d,a) -> (match v2 with
 							Int(i2) -> Sound(p,d *. float_of_int i2,a)
 							| Double(d2) -> Sound(p,d *. d2,a)
+							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+						| Array(a) -> (match v2 with
+							Int(i2) -> Array (buildList a i2)
 							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
@@ -386,14 +459,58 @@ let run (vars, funcs) =
 					| Double(d) -> Double (0. -. d), env
 					| _ -> raise (Failure (vType ^ " has no - operator")))
 			
-			(* Arrays *)
-			| Array(e) -> 
-				let evaledExprs, env = List.fold_left
-					(fun (values, env) expr ->
-						let v, env = eval env expr in v::values, env)
-					([], env) (List.rev e)
-				in
-			 	Array(evaledExprs), env
+			| Call("setDuration", actuals) -> 
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in if (List.length actuals != 2)
+				then raise(Failure("setDuration takes a sound and a double"))
+				else let newDuration = 
+					(match (List.nth actuals 1) with
+						Double(d) -> d
+						| _ -> raise (Failure ("Second argument must evaluate to a double"))
+					)
+				in  
+				(match (List.hd actuals) with
+					Sound(p, d, a) -> Sound(p,newDuration,a), env
+					| _ -> raise (Failure ("First argument must be a sound"))
+				)
+			| Call("setAmplitude", actuals) ->
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in if (List.length actuals != 2)
+				then raise(Failure("setAmplitude takes a sound and an iteger"))
+				else let newAmplitude = 
+					(match (List.nth actuals 1) with
+						Int(i) -> i
+						| _ -> raise (Failure ("Second argument must evaluate to an integer"))
+					)
+				in  
+				(match (List.hd actuals) with
+					Sound(p, d, a) -> Sound(p,d,newAmplitude), env
+					| _ -> raise (Failure ("First argument must be a sound"))
+				)
+			| Call("setPitches", actuals) ->
+				let actuals, env = List.fold_left
+					(fun (actuals, env) actual ->
+					let v, env = eval env actual in v :: actuals, env)
+					([], env) (List.rev actuals)
+				in if (List.length actuals != 2)
+				then raise(Failure("setPitches takes a sound and a pitch array"))
+				else let newPitches = 
+					(match (List.nth actuals 1) with
+						Array(i) -> (* print_endline (string_of_expr (List.hd i)); *)
+							List.rev (List.map (fun e -> string_of_expr e) i)
+						| _ -> raise (Failure ("Second argument must be an array of pitches"))
+					)
+				in  
+				(match (List.hd actuals) with
+					Sound(p, d, a) -> Sound(newPitches,d,a), env
+					| _ -> raise (Failure ("First argument must be a sound"))
+				)
 			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = 
@@ -407,7 +524,7 @@ let run (vars, funcs) =
 					| Pitch(p) -> p
 					| Id(i) -> let v, _ = eval env (Id(i)) in
 								print v
-					| Sound(p,d,a) -> "|" ^ String.concat ", " p ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
+					| Sound(p,d,a) -> "|" ^ String.concat ", " (List.rev p) ^ "|:" ^ string_of_float d ^ ":" ^ string_of_int a
 					| Array(a) -> "[" ^ build a ^ "]" and build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
@@ -477,7 +594,7 @@ let run (vars, funcs) =
 					| _ -> raise (Failure ("getDuration can only be called on sounds"))
 				)
 			(* for pitches and sounds *)
-			| Call("getPitch", [e]) ->
+			| Call("getPitches", [e]) ->
 				let v, env = eval env e in
 				(match v with
 					  Sound(p,d,a) -> 
@@ -488,6 +605,18 @@ let run (vars, funcs) =
 					  Array(List.rev(strings_to_pitches p)), env
 					| Pitch(p) -> Pitch(p), env
 					| _ -> raise (Failure ("getPitch can only be called on sounds or pitches"))
+				)
+			| Call("randomInt", [bound]) -> 
+				let v, env = eval env bound in
+				(match v with
+					  Int(i) -> Int(Random.int i), env
+					| _ -> raise (Failure ("argument must be an int"))
+				)
+			| Call("randomDouble", [bound]) ->
+				let v, env = eval env bound in
+				(match v with
+					  Double(d) -> Double(Random.float d), env
+					| _ -> raise (Failure ("argument must be a double"))
 				)
 			(* for arrays eyes only *)
 			| Call("length",[e]) -> 
@@ -519,7 +648,6 @@ let run (vars, funcs) =
 				in
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
-						print_endline (Ast.string_of_expr actual);
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in
@@ -575,7 +703,9 @@ let run (vars, funcs) =
 								else
 									raise (Failure ("undeclared identifier " ^ v))
 						    in
-							let env = exec env s in runloop env (Int((getInt idx2)+1)) tl
+							let env = exec env s in match idx2 with
+								Int(i) -> runloop env (Int(i+1)) tl
+								| _ -> runloop env (Int(0+1)) tl
 					in 
 					let arr, _ = eval env (Id(a)) in
 					(match arr with 
