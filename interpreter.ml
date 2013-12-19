@@ -423,7 +423,7 @@ let run (vars, funcs) =
 					Sound(p, d, a) -> Sound(p,d,newAmplitude), env
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
-			| Call("setPitch", actuals) ->
+			| Call("setPitches", actuals) ->
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
 					let v, env = eval env actual in v :: actuals, env)
@@ -523,7 +523,7 @@ let run (vars, funcs) =
 					| _ -> raise (Failure ("getDuration can only be called on sounds"))
 				)
 			(* for pitches and sounds *)
-			| Call("getPitch", [e]) ->
+			| Call("getPitches", [e]) ->
 				let v, env = eval env e in
 				(match v with
 					  Sound(p,d,a) -> 

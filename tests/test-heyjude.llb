@@ -92,7 +92,7 @@ sound quart(pitch p){
 	sound s;
 	pitch[] pArr;
 	pArr = [p];
-	s = setPitch(s, pArr);
+	s = setPitcheses(s, pArr);
 	s = setAmplitude(s, 100);
 	s = setDuration(s, 0.25);
 	return s;
@@ -102,7 +102,7 @@ sound eighth(pitch p){
 	sound s;
 	pitch[] pArr;
 	pArr = [p];
-	s = setPitch(s, [p]);
+	s = setPitches(s, [p]);
 	s = setAmplitude(s, 100);
 	s = setDuration(s, 0.125);
 	return s;
@@ -112,7 +112,7 @@ sound sixteenth(pitch p){
 	sound s;
 	pitch[] pArr;
 	pArr = [p];
-	s = setPitch(s, [p]);
+	s = setPitches(s, [p]);
 	s = setAmplitude(s, 100);
 	s = setDuration(s, 0.0625);
 	return s;
@@ -122,7 +122,7 @@ sound half(pitch p){
 	sound s;
 	pitch[] pArr;
 	pArr = [p];
-	s = setPitch(s, [p]);
+	s = setPitches(s, [p]);
 	s = setAmplitude(s, 100);
 	s = setDuration(s, 0.5);
 	return s;

@@ -18,7 +18,7 @@ sound[] randomBluesWalk(pitch p, int n, double d){
 	pitch newPitch;
 	acc = [];
 
-	s = setPitch(s, [p]);
+	s = setPitches(s, [p]);
 	s = setDuration(s, d);
 	s = setAmplitude(s, 75);
 
@@ -28,7 +28,7 @@ sound[] randomBluesWalk(pitch p, int n, double d){
 	for (i = 0; i < n; i = i + 1){
 		r = randomInt(4);
 		newPitch = p + blues[r];
-		s = setPitch(s, [newPitch]);
+		s = setPitches(s, [newPitch]);
 		acc[i] = s;
 	}
 	return acc;
