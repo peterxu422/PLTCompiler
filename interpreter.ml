@@ -148,12 +148,12 @@ let run (vars, funcs) =
 							end
 						else if NameMap.mem name globals then
 							begin
-								let v1Type2 = if v1Type = "array" then
-									(getType (match v1 with Array(v::_) -> v))
-								else v1Type in
-								let v2Type2 = if v2Type = "array" then
-									(getType (match v2 with Array(v::_) -> v))
-								else v2Type in
+								let v1Type2 = (match v1 with
+									Array(v::_) -> getType(v)
+									| _ -> v1Type) in
+								let v2Type2 = (match v2 with 
+									Array(v::_) -> getType(v)
+									| _ -> v2Type) in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
 								Returns v as the value because this is the l-value*)
