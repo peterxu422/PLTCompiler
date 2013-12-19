@@ -33,7 +33,6 @@ sound[] decrementSound(sound[] in, int amount){
 sound[] createQuarterNotes(sound[] in, int decAmount){
 	int i;
 	sound[] acc;
-	acc = [];
 	for (i = 0; i < length(in); i = i+1){
 		acc = concatArrays(acc, decrementSound(concatFour(in[i]), decAmount));
 	}
@@ -60,6 +59,8 @@ void main(){
 	sound[] acc;
 
 	int decAmount;
+
+	bpm(80);
 	decAmount = 15;
 
 	CM = |C5, E4, G3|:0.25:70;
@@ -73,7 +74,7 @@ void main(){
 	acc = concatArrays([|C4|:1.0:0],acc);
 
 	melody = [|C4|:0.75:0, quart(C6),
-			  |A5|:0.615:100, eighth(A5),eighth(C6),eighth(D6),
+			  |A5|:0.625:100, eighth(A5),eighth(C6),eighth(D6),
 			  |G5|:0.75:100, eighth(G5), eighth(A5),
 			  quart(Bb5), |F6|:0.375:100, eighth(F6), eighth(E6),eighth(C6),
 			  eighth(D6), sixteenth(C6),sixteenth(Bb5),half(A5),|C4|:0.125:0, eighth(C6),
@@ -92,7 +93,7 @@ sound quart(pitch p){
 	sound s;
 	pitch[] pArr;
 	pArr = [p];
-	s = setPitcheses(s, pArr);
+	s = setPitches(s, pArr);
 	s = setAmplitude(s, 100);
 	s = setDuration(s, 0.25);
 	return s;
