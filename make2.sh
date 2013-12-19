@@ -1,8 +1,9 @@
 #!/bin/bash
-rm *.cmo;
-rm *.cmi;
+rm interpret
 ocamllex scanner.mll;
 ocamlyacc parser.mly; 
+ocamlc -i ast.ml > ast.mli;
+ocamlc -c ast.mli;
 ocamlc -c ast.ml; 
 ocamlc -c parser.mli; 
 ocamlc -c scanner.ml; 
