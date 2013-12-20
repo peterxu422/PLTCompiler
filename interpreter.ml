@@ -90,7 +90,7 @@ let run (vars, funcs) =
 								  if v1Type = v2Type then check tail
 								  else raise (Failure(v2Type^" in an array of type "^v1Type)) 
 					| []	   -> evaledExprs
-				in check evaledExprs ;
+				in ignore(check evaledExprs);
 			 	Array(evaledExprs), env
 
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
@@ -565,7 +565,7 @@ let run (vars, funcs) =
 				if List.length actuals = 2 then
 					begin
 						(* Checks if 2nd arg is an int and if it is within its range. Then sets track_number *)
-						(try (int_of_string (Ast.string_of_expr (List.hd (List.tl actuals)))) with 
+						ignore(try (int_of_string (Ast.string_of_expr (List.hd (List.tl actuals)))) with 
 							Failure _ -> raise (stopMixDown(); Failure ("Invalid mixdown args. mixdown(<Array of Sounds or Sound>, <optional, Int, track_num, 0 - 15>")));
 						track_number := (Ast.string_of_expr (List.hd (List.tl actuals)));
 						if (((int_of_string !track_number) > 15) || ((int_of_string !track_number) < 0)) then 
@@ -659,7 +659,7 @@ let run (vars, funcs) =
 				in
 					if !first_mixdown_flag != false then raise (Failure ("Bpm must be set before mixdown is called to take affect"));
 					if List.length actuals != 1 then raise (Failure ("One argument must be passed to bpm"));
-					(try (int_of_string (Ast.string_of_expr (List.hd actuals))) with
+					ignore(try (int_of_string (Ast.string_of_expr (List.hd actuals))) with
 						Failure _ -> raise (Failure ("int must be passed to bpm. 40 - 300 is suggested")));
 					bpm := (int_of_string (Ast.string_of_expr (List.hd actuals)));
 					Int(0), env
