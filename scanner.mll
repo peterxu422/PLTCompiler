@@ -52,7 +52,7 @@ rule token = parse
 
 | "int"     { DATATYPE("int") }
 | "double"  { DATATYPE("double") }
-| "boolean" { DATATYPE("boolean") }
+| "boolean" { DATATYPE("bool") }
 | "pitch"   { DATATYPE("pitch") }
 | "sound"   { DATATYPE("sound") } 
 | "void"    { DATATYPE("void") }

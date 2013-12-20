@@ -39,7 +39,7 @@ let initType t =
 	| "booleanArr" -> Array([Boolean(false)])
 	| "pitchArr" -> Array([Pitch("C0")])
 	| "soundArr" -> Array([Sound(["C0"], 0., 0)])
-    | _ -> Boolean(false)
+	| _ -> Int(0)
 
 let stopMixDown () = 
 	let file = "bytecode" in
@@ -114,13 +114,6 @@ let run (vars, funcs) =
 					(NameMap.find var globals), env
 				else raise (Failure ("undeclared identifier " ^ var))
  			| Assign(var, e) ->
-
-				(* unused *)
-(*				let firstType, _  = (match var with 
-					Index(a, i) -> eval env (Index(a, [Int(0)]))
-					| _ -> var, env
-				) in *)
-
 				(* for type check, use Index[0] as reference *)
 				let lvar = (match var with
 					Index(a, i) -> Index(a, [Int(0)])
@@ -128,9 +121,7 @@ let run (vars, funcs) =
 				) in
 				
 				let v1, env = eval env lvar in
-				let v2, env = eval env e in
 				let v1Type = getType v1 in
-				let v2Type = getType v2 in
 				
 				let v, (locals, globals) = eval env e in
 				(match var with
@@ -139,6 +130,7 @@ let run (vars, funcs) =
 						Index(a, i), _ -> eval env (Assign((Index(a,i), e)))
 						| _,_ ->
 
+						let v2Type = getType v in
 						(* The local identifiers have already been added to ST in the first pass. 
 						Checks if it is indeed in there.*)
 						if NameMap.mem name locals then	
@@ -149,8 +141,8 @@ let run (vars, funcs) =
 															| _ -> v1))
 								else v1Type in
 								let v2Type2 = if v2Type = "array" && v1Type = "array" then
-									(getType (match v2 with Array(v::_) -> v
-															| _ -> v2))
+									(getType (match v with Array(d::_) -> d
+															| _ -> v))
 								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
@@ -167,8 +159,8 @@ let run (vars, funcs) =
 															| _ -> v1))
 								else v1Type in
 								let v2Type2 = if v2Type = "array" && v1Type = "array" then
-									(getType (match v2 with Array(v::_) -> v
-															| _ -> v2))
+									(getType (match v with Array(d::_) -> d
+															| _ -> v))
 								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
@@ -190,6 +182,7 @@ let run (vars, funcs) =
 							 	raise (Failure ("Illegal index"))
 					)
 					in
+					let v2Type = (getType v) in
 					let rec setElt exprs = function
 						[] -> raise (Failure ("Cannot assign to empty array"))
 						| hd :: [] -> let idx = getIndex hd in
@@ -678,6 +671,7 @@ let run (vars, funcs) =
 				try
 					let globals = call fdecl actuals globals
 					in Boolean(false), (locals, globals)
+(*					in Int(0), (locals, globals)*)
 				with ReturnException(v, globals) -> v, (locals, globals)
 			in
 
