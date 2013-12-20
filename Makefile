@@ -17,5 +17,7 @@ clean:
 	rm -rf *.cmo
 	rm -rf *.cmi
 	rm -rf *.mli
-	rm BytecodeTranslator.class
-	rm interpret
+	rm -rf BytecodeTranslator.class
+	rm -rf interpret
+	rm -rf bytecode
+	rm -rf *.mid
