@@ -13,6 +13,5 @@ microc.ml
 parser.ml
 parser.mli
 printAst
-printast.ml
 printer
 scanner.ml

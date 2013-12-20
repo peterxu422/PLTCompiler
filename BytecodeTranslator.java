@@ -3,16 +3,17 @@ import org.jfugue.*;
  
 public class BytecodeTranslator {
 	/*** 
-	Andrew is not that cool
 	   To compile: javac -classpath ./jfugue-4.0.3.jar BytecodeTranslator.java
 	   To run: java -cp jfugue-4.0.3.jar:. BytecodeTranslator [filename]
     ***/
 	public static void main(String[] args) {
-		if (args.length != 1){
-			System.out.println("must give a bytecode filename");
+		if (args.length != 2){
+			System.out.println("must give a bytecode filename and a midifile name");
+			System.out.println(args.length);
 			System.exit(1);
 		}
-		String fileName = args[0];
+		String byteCodeFileName = args[0];
+		String midiFileName = args[1];
 		BufferedReader br = null;
  		Player player = new Player(); 
 		Pattern p = new Pattern();
@@ -21,13 +22,22 @@ public class BytecodeTranslator {
 		String[] tracks = new String[16];
 		String[] mixDownWrites;
 
-		String test = "";
-
 		try {
 
-			br = new BufferedReader(new FileReader(fileName));
+			String tempo = "T";
+			int first = 1;
+			br = new BufferedReader(new FileReader(byteCodeFileName));
 			while ((currentLine = br.readLine()) != null) {
-				byteCode += currentLine.charAt(0) + currentLine.substring(2, currentLine.length()-1) + "\n";	
+				if(first ==1){
+					if(currentLine.charAt(0) == 'x'){
+						//System.err.println("Lullabyte file failed or mixdown was not called.");
+						System.exit(0);
+					}
+					tempo = tempo + currentLine + " ";
+				} else {
+					byteCode += currentLine.charAt(0) + currentLine.substring(2, currentLine.length()-1) + "\n";	
+				}
+				first --;
 			}
 
 			mixDownWrites = byteCode.split("\n");
@@ -40,6 +50,8 @@ public class BytecodeTranslator {
 					tracks[trackNum] += mixDownWrites[i].substring(1);
 				}
 			}
+
+			String midiWrite = "";
 
 			for (int i=0;i<tracks.length;i++){
 				if(tracks[i] != null){
@@ -77,14 +89,21 @@ public class BytecodeTranslator {
 						}
 							chord += chords[chords.length-1].substring(0, chords[chords.length-1].length()-1) + "/" + durr + "a" + amp + " ";
 					}
-					chord = chord.substring(0, chord.length()-1);
+					try {
+						chord = chord.substring(0, chord.length()-1);	
+					} catch (StringIndexOutOfBoundsException e){
+						System.out.println("Mixdown must be called on an array of sounds");
+						System.exit(1);
+					}
+					
 					track += chord;
-					test += track;
-					p.add(track);
+					midiWrite += track;
 				}
 			}
 
-			player.saveMidi(p, new File("music-file.mid")); 
+			midiWrite = tempo + midiWrite;
+			p.add(midiWrite);
+			player.saveMidi(p, new File(midiFileName)); 
 			player.play(p);
 		} catch (IOException e) {
 			e.printStackTrace();

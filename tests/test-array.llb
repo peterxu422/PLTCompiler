@@ -14,14 +14,14 @@ void main() {
 	
 	//Initializing and assigning to empty array. Pad the beginning with
 	//type default values
-	q = [];
+//	q = [];
 	q[10] = 1;
 	print(1);
 	print(q[10]);
 	print(q);
 	
 	//Boolean arrays
-	b = [];
+//	b = [];
 	b[10] = true;
 	print(true);
 	print(b[10]);

@@ -16,5 +16,4 @@ void main() {
 	print(p);
 	print(s1);
 	print(s2);
-	
 }
