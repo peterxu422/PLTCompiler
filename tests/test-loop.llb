@@ -21,6 +21,7 @@ void main() {
 	
 	scale =	[c, d, e];
 	print(scale);
+
 	loop(s : scale) {
 		s = s * 3;
 		print(getPitches(s));
@@ -28,7 +29,7 @@ void main() {
 		print(getAmplitude(s));
 	}
 	print(scale);
-	
+
 	durs = [0.1, 0.2, 0.3];
 	i = 0;
 	loop(diter : durs) {

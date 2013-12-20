@@ -65,7 +65,11 @@ let fname = ref "" ;;
 let run (vars, funcs) =
 	(* Put function declarations in a symbol table *)
 	let func_decls = List.fold_left
-		(fun funcs fdecl -> NameMap.add fdecl.fname fdecl funcs)
+		(fun funcs fdecl -> if (NameMap.mem fdecl.fname funcs)
+							then
+								raise (Failure ("function "^fdecl.fname^" has already been declared"))
+							else
+							NameMap.add fdecl.fname fdecl funcs)
 		NameMap.empty funcs
 	in
 	(* Put function type in a table of function types *)
@@ -769,10 +773,28 @@ let run (vars, funcs) =
 						| hd :: tl -> let idxlist = idx2::[] in
 							let locals, globals = env in
 							let env = 
-								if NameMap.mem v locals then
-									(NameMap.add v (Index(a,idxlist)) locals, globals)
-								else if NameMap.mem v globals then
-									(locals, NameMap.add v (Index(a,idxlist)) globals)
+								if NameMap.mem v locals
+								then
+									let ev1, _ = eval env (NameMap.find v locals) in
+									let type1 = (getType ev1) in
+									let ev2, _ = eval env (Index(a, [Int(0)])) in
+									let type2 = (getType ev2) in
+									if type1 = type2
+									then
+										(NameMap.add v (Index(a,idxlist)) locals, globals)
+									else 
+										raise (Failure (type1^" is matched with type "^type2))
+								else if NameMap.mem v globals
+								then
+									let ev1, _ = eval env (NameMap.find v globals) in
+									let type1 = (getType ev1) in
+									let ev2, _ = eval env (Index(a, [Int(0)])) in
+									let type2 = (getType ev2) in
+									if type1 = type2
+									then
+										(locals, NameMap.add v (Index(a,idxlist)) globals)
+									else
+										raise (Failure (type1^" is matched with type "^type2))
 								else
 									(stopMixDown(); raise (Failure ("undeclared identifier " ^ v)))
 						    in
@@ -838,12 +860,20 @@ let run (vars, funcs) =
 					(stopMixDown(); raise (Failure ("wrong number of arguments to: " ^ fdecl.fname)))
 			in
 			let locals = List.fold_left (* init locals to 0 *)
-				(fun locals local -> NameMap.add local.varname (initType local.vartype) locals) locals fdecl.locals
+				(fun locals local -> if (NameMap.mem local.varname locals)
+									 then
+										raise (Failure (local.varname^" has already been declared locally"))
+									 else
+										NameMap.add local.varname (initType local.vartype) locals) locals fdecl.locals
 			in
 	    	snd (List.fold_left exec (locals, globals) fdecl.body)
 
 		in let globals = List.fold_left
-			(fun globals vdecl -> NameMap.add vdecl.varname (initType vdecl.vartype) globals) NameMap.empty vars
+			(fun globals vdecl -> if (NameMap.mem vdecl.varname globals)
+								  then
+									  raise (Failure (vdecl.varname^" has already been dclared globally"))
+								  else
+									  NameMap.add vdecl.varname (initType vdecl.vartype) globals) NameMap.empty vars
 		in try
 			call (NameMap.find "main" func_decls) [] globals
 		with Not_found -> (stopMixDown(); raise (Failure("did not find the main() function")))
