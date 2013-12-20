@@ -7,6 +7,7 @@ int fib (int n){
 }
 
 
+
 sound[] offsetFib(pitch p){
 	int offset;
 	sound[] accumulator;
@@ -28,6 +29,7 @@ sound[] offsetFib(pitch p){
 void main(){
 	pitch pitchC2;
 	sound[] fibScale;
+	sound s;
 
 	pitchC2 = C2;
 	fibScale = offsetFib(pitchC2);

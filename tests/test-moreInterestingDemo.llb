@@ -1,11 +1,12 @@
 void main(){
 	sound[] acc;
-	acc = [];
+	sound s;
 	acc = buildup(G3);
 	// acc = frequency(100.0, A3);
 	// acc = transposeUp([C2, E2, G2],3);
+	s = setAmplitude(acc[0], 0);
 
-	mixdown(acc);
+	mixDown(acc);
 }
 
 // transposeUp(pitch[] pitches, int count){
@@ -33,18 +34,18 @@ sound[] buildup(pitch p){
 	double duration;
 	sound s;
 	sound[] acc;
-	acc = [];
+
 	duration = 0.5;
 
 	for (i = 0; i < 300; i = i+1){
 	if (i%3 == 0){
-		s = setPitch(s, [p, D5]);
+		s = setPitches(s, [p, D5]);
 	}
 	if (i%3 == 1){
-		s = setPitch(s, [p, B5]);
+		s = setPitches(s, [p, B5]);
 	}
 	if (i%3 == 2){
-		s = setPitch(s, [p, C6]);
+		s = setPitches(s, [p, C6]);
 	}
 	
 		s = setAmplitude(s, 100);
