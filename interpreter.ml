@@ -838,12 +838,20 @@ let run (vars, funcs) =
 					(stopMixDown(); raise (Failure ("wrong number of arguments to: " ^ fdecl.fname)))
 			in
 			let locals = List.fold_left (* init locals to 0 *)
-				(fun locals local -> NameMap.add local.varname (initType local.vartype) locals) locals fdecl.locals
+				(fun locals local -> if (NameMap.mem local.varname locals)
+									 then
+										raise (Failure (local.varname^" has already been declared locally"))
+									 else
+										NameMap.add local.varname (initType local.vartype) locals) locals fdecl.locals
 			in
 	    	snd (List.fold_left exec (locals, globals) fdecl.body)
 
 		in let globals = List.fold_left
-			(fun globals vdecl -> NameMap.add vdecl.varname (initType vdecl.vartype) globals) NameMap.empty vars
+			(fun globals vdecl -> if (NameMap.mem vdecl.varname globals)
+								  then
+									  raise (Failure (vdecl.varname^" has already been dclared globally"))
+								  else
+									  NameMap.add vdecl.varname (initType vdecl.vartype) globals) NameMap.empty vars
 		in try
 			call (NameMap.find "main" func_decls) [] globals
 		with Not_found -> (stopMixDown(); raise (Failure("did not find the main() function")))
