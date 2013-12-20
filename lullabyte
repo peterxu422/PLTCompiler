@@ -1,0 +1,11 @@
+#!/bin/bash
+#./lullabtye MyMusic.llb MyMusicMidi.mid
+./interpret < $1
+if [ ! -z $2 ] 
+then 
+	java -cp jfugue-4.0.3.jar:. BytecodeTranslator bytecode $2
+    # $2 was given
+else
+	java -cp jfugue-4.0.3.jar:. BytecodeTranslator bytecode llb-write.mid
+    # $2 was not given
+fi
