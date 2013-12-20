@@ -41,6 +41,7 @@ let initType t =
 	| "soundArr" -> Array([Sound(["C0"], 0., 0)])
 	| _ -> Int(0)
 
+(* if mixdown is not called, bytecode has x\n to indicate to BytecodeTranslator that it shouldn't attempt to play/write MIDI *)
 let stopMixDown () = 
 	let file = "bytecode" in
 		let oc = open_out file in
@@ -51,7 +52,7 @@ let stopMixDown () =
 let first_mixdown_flag = ref false;;
 (* default bpm value *)
 let bpm = ref 220;;
-(* if mixdown is not called, bytecode has x\n to indicate to BytecodeTranslator that it shouldn't attempt to play/write MIDI *)
+let opt = ref "b";; 
 
 let run (vars, funcs) =
 	(* Put function declarations in a symbol table *)
@@ -479,11 +480,19 @@ let run (vars, funcs) =
 				else let newDuration = 
 					(match (List.nth actuals 1) with
 						Double(d) -> d
+						| Index(a,i) -> 
+							(match eval env (Index(a,i)) with
+								Double(d),_ -> d
+								| _,_ -> raise (Failure ("Second argument must evaluate to a double")) )
 						| _ -> raise (Failure ("Second argument must evaluate to a double"))
 					)
 				in  
 				(match (List.hd actuals) with
 					Sound(p, d, a) -> Sound(p,newDuration,a), env
+					| Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Sound(p,newDuration,a), env
+							| _,_ -> raise (Failure ("First argument must be a sound")) )
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
 			| Call("setAmplitude", actuals) ->
@@ -492,15 +501,23 @@ let run (vars, funcs) =
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in if (List.length actuals != 2)
-				then raise(Failure("setAmplitude takes a sound and an iteger"))
+				then raise(Failure("setAmplitude takes a sound and an integer"))
 				else let newAmplitude = 
 					(match (List.nth actuals 1) with
 						Int(i) -> i
+						| Index(a,i) -> 
+							(match eval env (Index(a,i)) with
+								Int(i),_ -> i
+								| _,_ -> raise (Failure ("Second argument must evaluate to an integer")) )
 						| _ -> raise (Failure ("Second argument must evaluate to an integer"))
 					)
 				in  
 				(match (List.hd actuals) with
 					Sound(p, d, a) -> Sound(p,d,newAmplitude), env
+					| Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Sound(p,d,newAmplitude), env
+							| _,_ -> raise (Failure ("First argument must be a sound")) )
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
 			| Call("setPitches", actuals) ->
@@ -514,14 +531,22 @@ let run (vars, funcs) =
 					(match (List.nth actuals 1) with
 						Array(i) -> (* print_endline (string_of_expr (List.hd i)); *)
 							List.rev (List.map (fun e -> string_of_expr e) i)
+						| Index(a,i) -> 
+							(match eval env (Index(a,i)) with
+								Array(i),_ -> List.rev (List.map (fun e -> string_of_expr e) i)
+								| Pitch(p),_ -> p::[]
+								| _,_ -> raise (Failure ("Second argument must be an array of pitches")) )
 						| _ -> raise (Failure ("Second argument must be an array of pitches"))
 					)
 				in  
 				(match (List.hd actuals) with
 					Sound(p, d, a) -> Sound(newPitches,d,a), env
+					| Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Sound(newPitches,d,a), env
+							| _,_ -> raise (Failure ("First argument must be a sound")) )
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
-			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = 
 					(match eval env e with
@@ -583,7 +608,7 @@ let run (vars, funcs) =
 					if !first_mixdown_flag = false then
 						begin
 							let oc = open_out file in
-								fprintf oc "%s\n" (string_of_int !bpm);
+								fprintf oc "%s %s\n" (string_of_int !bpm) !opt;
 								fprintf oc "%s\n" (!track_number ^ (writeByteCode (List.hd actuals)));
 								close_out oc
 						end 
@@ -593,7 +618,7 @@ let run (vars, funcs) =
 								output_string oc (!track_number ^ (writeByteCode (List.hd actuals)) ^ "\n");
 								close_out oc
 						end;
-					print_endline ("Mixing down track " ^ !track_number);
+					(* print_endline ("Mixing down track " ^ !track_number); *)
 					first_mixdown_flag := true;
 					Int(0), env
 			(* for pitches and sounds *)
@@ -601,6 +626,10 @@ let run (vars, funcs) =
 				let v, env = eval env e in
 				(match v with
 					  Sound(p,d,a) -> Int(a), env
+					  | Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Int(a), env
+							| _,_ -> raise (Failure ("getAmplitude can only be called on sounds")) )
 					| _ -> raise (Failure ("getAmplitude can only be called on sounds"))
 				)
 			(* for sounds *)
@@ -608,6 +637,10 @@ let run (vars, funcs) =
 				let v, env = eval env e in
 				(match v with
 					  Sound(p,d,a) -> Double(d), env
+					  | Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Double(d), env
+							| _,_ -> raise (Failure ("getDuration can only be called on sounds")) )
 					| _ -> raise (Failure ("getDuration can only be called on sounds"))
 				)
 			(* for pitches and sounds *)
@@ -622,6 +655,16 @@ let run (vars, funcs) =
 					  in
 					  Array(List.rev(strings_to_pitches p)), env
 					| Pitch(p) -> Pitch(p), env
+					| Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> 
+							let rec strings_to_pitches = function
+								  hd :: [] -> [Pitch(hd)]
+								| hd :: tl -> [Pitch(hd)] @ strings_to_pitches tl
+								| _ -> raise (Failure ("getPitches can only be called on sounds with pitches"))
+							 in
+							 Array(List.rev(strings_to_pitches p)), env
+							| _,_ -> raise (Failure ("getPitches can only be called on sounds or pitches")) )
 					| _ -> raise (Failure ("getPitches can only be called on sounds or pitches"))
 				)
 			| Call("randomInt", [bound]) -> 
@@ -637,7 +680,7 @@ let run (vars, funcs) =
 					| _ -> raise (Failure ("argument must be a double"))
 				)
 			(* for arrays eyes only *)
-			| Call("length",[e]) -> 
+			| Call("length", [e]) -> 
 				let v, env = eval env e in
 				(match v with
 					  Array(a) -> Int(List.length a), env
@@ -656,6 +699,14 @@ let run (vars, funcs) =
 						Failure _ -> raise (Failure ("int must be passed to bpm. 40 - 300 is suggested")));
 					bpm := (int_of_string (Ast.string_of_expr (List.hd actuals)));
 					Int(0), env
+			(* midi is only written and not played *)
+			| Call("write", []) ->
+				opt := "w";
+				Int(0), env
+			(* midi is only played and not written *)
+			| Call("play", []) ->
+				opt := "p";
+				Int(0), env
 			(* this does function calls. *)
 			| Call(f, actuals) -> 
 				let fdecl =

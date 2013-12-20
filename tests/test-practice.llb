@@ -1,96 +1,33 @@
-int i;
-double d;
-boolean b;
-pitch p;
-sound s;
-
 
 void main(){
-	int g;
-	double f;
-	int[] a; //Need to include arrays
-	int a2;
-	/*
-	i = 15;
-	f = 2.5;
-	s = |A5|:0.25:100;
-	*/
-	//i = a[0];
-	//a = [0,1,2.5,3.2,4];
-	a = [0,1,2,3,4];
-	print(|A5|:0.25:100);
-	
-	/*
-	print(a);
-	a[3] = A5;
-	print(a);
-	print(f);
-	print(s);
-	
-	print(1);
-	print(3.14);
-	print(true);
-	print(false);
-	print(A5);
-	print(|A5|:0.25:100);
-	print([|A5|:0.25:100, |A6|:0.25:100, |B1|:0.25:100, |C4|:0.25:100]);
-	
-	i = 5;
-	//sound a; //Cannot declare var here, must be in the beginning
-	print(5);
-	true = true;
-	hello = world;
-	false;
-	[1, 2, 3];
-	print(4.5);
+	sound c;
+	sound d;
+	sound e;
+	sound[] scale;
+	sound s;
+	double[] durs;
+	double diter;
+	int i;
 	
 	
-	//Testing pitch literals
-	p = A0;
-	p = A#5;
-	p = Ab5;
-	p = C10;
-	p = Cb10;
-	p = D#10;
+	c = |C1|:0.25:100;
+	d = |D1|:0.25:100;
+	e = |E1|:0.25:100;
 	
-	//p = A10;
-	//p = G11;
-	//p = G#10;
-	//p = A#b5;
+	durs = [0.1, 0.2, 0.3];
+	i = 0;
+	scale =	[c, d, e];
+	print(scale);
+	/*loop(diter : durs) {
+		scale[i] = setDuration(scale[i], diter);
+		i = i+1;
+	}*/
 	
-	
-	//Testing sound literals
-	s = |A5|:1/4:100;
-	s = |sound_id|:fract_id:10;
-	s = |s_id1, s_id2, s_id3|:0.25:100;
-	s = |A5, B1, G9|:0.375:100;
-	
-	//Testing double literals
-	d = 0.5;
-	d=1.9999;
-	
-	//Testing boolean
-	b = true;
-	
-	//Testing if Statement
-	
-	if(true) 
-	{
-		d = 0.5;
+	loop(s : scale) {
+		s = setDuration(s, 0.5);
+		print(getPitches(s));
+		print(getDuration(s));
+		print(getAmplitude(s));
 	}
-	
-	//Testing return Statement
-	return a;
-	*/
-	
-	loop(a2:a) {
-		print(a2 + 3);
-		if(a2 == 1) {
-			a2 = 6;
-		}
-		print(a);
-	}
-	
-	print(a);
-	print(a2);
+	print(scale);
 }
