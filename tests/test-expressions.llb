@@ -1,5 +1,7 @@
 void main()
 {
+	int a;
+	int b;
 	sound s;
 	print(a + b);
 	print(a - b);
@@ -9,7 +11,7 @@ void main()
 	a = a + b;
 	a = !a;
 	a = -a;
-	s = |A5, B1, G9|:0.333:100^;
+	s = |A5, B1, G9|:0.333:100;
 	print(a || b);
 	print(a && b);
 	print(a == b);

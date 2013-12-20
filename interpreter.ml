@@ -5,6 +5,11 @@ module NameMap = Map.Make(struct
 	let compare x y = Pervasives.compare x y
 end)
 
+module TypeMap = Map.Make(struct
+	type t = string
+	let compare x y = Pervasives.compare x y
+end)
+
 let _ = Random.self_init()
 
 (* Returns the type of an expression v *)
@@ -54,12 +59,21 @@ let first_mixdown_flag = ref false;;
 let bpm = ref 220;;
 let opt = ref "b";; 
 
+(* current function name *)
+let fname = ref "" ;;
+
 let run (vars, funcs) =
 	(* Put function declarations in a symbol table *)
 	let func_decls = List.fold_left
 		(fun funcs fdecl -> NameMap.add fdecl.fname fdecl funcs)
 		NameMap.empty funcs
 	in
+	(* Put function type in a table of function types *)
+	let func_types = List.fold_left
+		(fun funcs fdecl -> TypeMap.add fdecl.fname fdecl.rtype funcs)
+		TypeMap.empty funcs
+	in
+
 	(* set up the function that decomposes a function call *)
 	let rec call fdecl actuals globals = 
 
@@ -70,7 +84,6 @@ let run (vars, funcs) =
 			| Boolean(b) -> Boolean(b), env
 			| Pitch(p) -> Pitch(p), env
 			| Sound(p,d,a) -> Sound(p,d,a), env
-
 			(* Arrays *)
 			| Array(e) -> 
 				let evaledExprs, env = List.fold_left
@@ -92,7 +105,7 @@ let run (vars, funcs) =
 					| []	   -> evaledExprs
 				in ignore(check evaledExprs);
 			 	Array(evaledExprs), env
-
+			(* Index *)
 			| Index(a,i) -> let v, (locals, globals) = eval env (Id(a)) in
 				let rec lookup arr indices =
 					let arr = match arr with
@@ -130,7 +143,7 @@ let run (vars, funcs) =
 					(match eval env (Id(name)) with
 						Index(a, i), _ -> eval env (Assign((Index(a,i), e)))
 						| _,_ ->
-
+						
 						let v2Type = getType v in
 						(* The local identifiers have already been added to ST in the first pass. 
 						Checks if it is indeed in there.*)
@@ -709,9 +722,15 @@ let run (vars, funcs) =
 				Int(0), env
 			(* this does function calls. *)
 			| Call(f, actuals) -> 
+				fname := f;
 				let fdecl =
 				  try NameMap.find f func_decls
 				  with Not_found -> raise (Failure ("undefined function " ^ f))
+				in
+				(* get function type for initializing function return value *)
+				let ftype =
+				  try TypeMap.find f func_types
+				  with Not_found -> raise (Failure ("undefined function " ^f))
 				in
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
@@ -721,14 +740,12 @@ let run (vars, funcs) =
 				let (locals, globals) = env in
 				try
 					let globals = call fdecl actuals globals
-					in Boolean(false), (locals, globals)
-(*					in Int(0), (locals, globals)*)
+					in (initType ftype), (locals, globals)
 				with ReturnException(v, globals) -> v, (locals, globals)
 			in
-
 			(* executes statements, calls evals on expressions *)
 			let rec exec env = function
-			Block(stmts) -> List.fold_left exec env stmts
+				Block(stmts) -> List.fold_left exec env stmts
 				| Expr(e) -> let _, env = eval env e in env
 				| If(e, s1, s2) ->
 					let v, env = eval env e in
@@ -748,16 +765,6 @@ let run (vars, funcs) =
 						else
 							env
 					in loop env
-				(*| Loop(v, a, s) -> 
-                    let rec runloop env = function
-                        [] -> env
-                        | hd :: tl -> let var, env = eval env (Assign(v, hd)) in
-							let env = exec env s in runloop env tl
-                            in 
-                            let arr, _ = eval env a in
-                            (match arr with 
-                                Array(x) -> runloop env x)
-								*)
 				| Loop(v, a, s) -> 
 					let rec runloop env idx2 = function
 						[] -> env
@@ -779,8 +786,19 @@ let run (vars, funcs) =
 					(match arr with 
 						Array(x) -> runloop env (Int(0)) x
 						| _ -> raise (Failure ("Looping on array was expected")))
+
 				| Return(e) ->
 				let v, (locals, globals) = eval env e in
+				(* find current function type *)
+				let ftype =
+				  try TypeMap.find !fname func_types
+				  with Not_found -> raise (Failure ("undefined function " ^(!fname)))
+				in
+				let rtype = (getType v) in
+				(* check function type and return type *)
+				if ftype <> rtype then
+					raise(Failure("function type is of "^ftype^" while the return type is of "^rtype))
+				;
 				raise (ReturnException(v, globals))
 			in  
 
@@ -790,7 +808,7 @@ let run (vars, funcs) =
 					(fun locals formal actual -> NameMap.add formal.paramname actual locals) NameMap.empty fdecl.formals actuals
 				with Invalid_argument(_) ->
 					raise (Failure ("wrong number of arguments to: " ^ fdecl.fname))
-			in 
+			in
 			let locals = List.fold_left (* init locals to 0 *)
 				(fun locals local -> NameMap.add local.varname (initType local.vartype) locals) locals fdecl.locals
 			in
