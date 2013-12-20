@@ -40,7 +40,7 @@ void main(){
 			  eighth(D6), quart(D6), eighth(D6), eighth(G6), sixteenth(F6), eighth(E6),sixteenth(F6), eighth(D6),
 			  half(C6), eighth(F5), eighth(G5), eighth(A5), eighth(D6),
 			  quart(C6), |C5|:0.125:0, eighth(C6), eighth(Bb5), eighth(A5), eighth(E5), eighth(F5),
-			  |F5|:1.0:100];
+			  |F5|:1.0:0];
 
 	// print(melody);
 	// print(acc);
