@@ -5,6 +5,16 @@ void main() {
 	sound[] scale;
 	sound s;
 	
+	double[] durs;
+	double diter;
+	int i;
+	
+	int[] amps;
+	int aiter;
+	
+	pitch[] pits;
+	pitch piter;
+	
 	c = |C1|:0.25:100;
 	d = |D1|:0.25:100;
 	e = |E1|:0.25:100;
@@ -13,6 +23,34 @@ void main() {
 	print(scale);
 	loop(s : scale) {
 		s = s * 3;
+		print(getPitches(s));
+		print(getDuration(s));
+		print(getAmplitude(s));
 	}
 	print(scale);
+	
+	durs = [0.1, 0.2, 0.3];
+	i = 0;
+	loop(diter : durs) {
+		scale[i] = setDuration(scale[i], diter);
+		i = i + 1;
+	}
+	print(scale);
+	
+	amps = [25, 50, 75];
+	i = 0;
+	loop(aiter : amps) {
+		scale[i] = setAmplitude(scale[i], aiter);
+		i = i + 1;
+	}
+	print(scale);
+	
+	pits = [A1, B1, F1];
+	i = 0;
+	loop(piter : pits) {
+		scale[i] = setPitches(scale[i], piter);
+		i = i + 1;
+	}
+	print(scale);
+	
 }

@@ -39,7 +39,7 @@ let initType t =
 	| "booleanArr" -> Array([Boolean(false)])
 	| "pitchArr" -> Array([Pitch("C0")])
 	| "soundArr" -> Array([Sound(["C0"], 0., 0)])
-    | _ -> Boolean(false)
+	| _ -> Int(0)
 
 (* if mixdown is not called, bytecode has x\n to indicate to BytecodeTranslator that it shouldn't attempt to play/write MIDI *)
 let stopMixDown () = 
@@ -115,13 +115,6 @@ let run (vars, funcs) =
 					(NameMap.find var globals), env
 				else raise (Failure ("undeclared identifier " ^ var))
  			| Assign(var, e) ->
-
-				(* unused *)
-(*				let firstType, _  = (match var with 
-					Index(a, i) -> eval env (Index(a, [Int(0)]))
-					| _ -> var, env
-				) in *)
-
 				(* for type check, use Index[0] as reference *)
 				let lvar = (match var with
 					Index(a, i) -> Index(a, [Int(0)])
@@ -129,9 +122,7 @@ let run (vars, funcs) =
 				) in
 				
 				let v1, env = eval env lvar in
-				let v2, env = eval env e in
 				let v1Type = getType v1 in
-				let v2Type = getType v2 in
 				
 				let v, (locals, globals) = eval env e in
 				(match var with
@@ -140,6 +131,7 @@ let run (vars, funcs) =
 						Index(a, i), _ -> eval env (Assign((Index(a,i), e)))
 						| _,_ ->
 
+						let v2Type = getType v in
 						(* The local identifiers have already been added to ST in the first pass. 
 						Checks if it is indeed in there.*)
 						if NameMap.mem name locals then	
@@ -150,8 +142,8 @@ let run (vars, funcs) =
 															| _ -> v1))
 								else v1Type in
 								let v2Type2 = if v2Type = "array" && v1Type = "array" then
-									(getType (match v2 with Array(v::_) -> v
-															| _ -> v2))
+									(getType (match v with Array(d::_) -> d
+															| _ -> v))
 								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
@@ -168,8 +160,8 @@ let run (vars, funcs) =
 															| _ -> v1))
 								else v1Type in
 								let v2Type2 = if v2Type = "array" && v1Type = "array" then
-									(getType (match v2 with Array(v::_) -> v
-															| _ -> v2))
+									(getType (match v with Array(d::_) -> d
+															| _ -> v))
 								else v2Type in
 						
 								(* Updates the var in the ST to evaluated expression e, which is stored in v. 
@@ -191,6 +183,7 @@ let run (vars, funcs) =
 							 	raise (Failure ("Illegal index"))
 					)
 					in
+					let v2Type = (getType v) in
 					let rec setElt exprs = function
 						[] -> raise (Failure ("Cannot assign to empty array"))
 						| hd :: [] -> let idx = getIndex hd in
@@ -487,11 +480,19 @@ let run (vars, funcs) =
 				else let newDuration = 
 					(match (List.nth actuals 1) with
 						Double(d) -> d
+						| Index(a,i) -> 
+							(match eval env (Index(a,i)) with
+								Double(d),_ -> d
+								| _,_ -> raise (Failure ("Second argument must evaluate to a double")) )
 						| _ -> raise (Failure ("Second argument must evaluate to a double"))
 					)
 				in  
 				(match (List.hd actuals) with
 					Sound(p, d, a) -> Sound(p,newDuration,a), env
+					| Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Sound(p,newDuration,a), env
+							| _,_ -> raise (Failure ("First argument must be a sound")) )
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
 			| Call("setAmplitude", actuals) ->
@@ -500,15 +501,23 @@ let run (vars, funcs) =
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in if (List.length actuals != 2)
-				then raise(Failure("setAmplitude takes a sound and an iteger"))
+				then raise(Failure("setAmplitude takes a sound and an integer"))
 				else let newAmplitude = 
 					(match (List.nth actuals 1) with
 						Int(i) -> i
+						| Index(a,i) -> 
+							(match eval env (Index(a,i)) with
+								Int(i),_ -> i
+								| _,_ -> raise (Failure ("Second argument must evaluate to an integer")) )
 						| _ -> raise (Failure ("Second argument must evaluate to an integer"))
 					)
 				in  
 				(match (List.hd actuals) with
 					Sound(p, d, a) -> Sound(p,d,newAmplitude), env
+					| Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Sound(p,d,newAmplitude), env
+							| _,_ -> raise (Failure ("First argument must be a sound")) )
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
 			| Call("setPitches", actuals) ->
@@ -522,11 +531,20 @@ let run (vars, funcs) =
 					(match (List.nth actuals 1) with
 						Array(i) -> (* print_endline (string_of_expr (List.hd i)); *)
 							List.rev (List.map (fun e -> string_of_expr e) i)
+						| Index(a,i) -> 
+							(match eval env (Index(a,i)) with
+								Array(i),_ -> List.rev (List.map (fun e -> string_of_expr e) i)
+								| Pitch(p),_ -> p::[]
+								| _,_ -> raise (Failure ("Second argument must be an array of pitches")) )
 						| _ -> raise (Failure ("Second argument must be an array of pitches"))
 					)
 				in  
 				(match (List.hd actuals) with
 					Sound(p, d, a) -> Sound(newPitches,d,a), env
+					| Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Sound(newPitches,d,a), env
+							| _,_ -> raise (Failure ("First argument must be a sound")) )
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
 			| Call("print", [e]) -> 
@@ -608,6 +626,10 @@ let run (vars, funcs) =
 				let v, env = eval env e in
 				(match v with
 					  Sound(p,d,a) -> Int(a), env
+					  | Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Int(a), env
+							| _,_ -> raise (Failure ("getAmplitude can only be called on sounds")) )
 					| _ -> raise (Failure ("getAmplitude can only be called on sounds"))
 				)
 			(* for sounds *)
@@ -615,6 +637,10 @@ let run (vars, funcs) =
 				let v, env = eval env e in
 				(match v with
 					  Sound(p,d,a) -> Double(d), env
+					  | Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> Double(d), env
+							| _,_ -> raise (Failure ("getDuration can only be called on sounds")) )
 					| _ -> raise (Failure ("getDuration can only be called on sounds"))
 				)
 			(* for pitches and sounds *)
@@ -629,6 +655,16 @@ let run (vars, funcs) =
 					  in
 					  Array(List.rev(strings_to_pitches p)), env
 					| Pitch(p) -> Pitch(p), env
+					| Index(a,i) -> 
+						(match eval env (Index(a,i)) with
+							Sound(p,d,a),_ -> 
+							let rec strings_to_pitches = function
+								  hd :: [] -> [Pitch(hd)]
+								| hd :: tl -> [Pitch(hd)] @ strings_to_pitches tl
+								| _ -> raise (Failure ("getPitches can only be called on sounds with pitches"))
+							 in
+							 Array(List.rev(strings_to_pitches p)), env
+							| _,_ -> raise (Failure ("getPitches can only be called on sounds or pitches")) )
 					| _ -> raise (Failure ("getPitches can only be called on sounds or pitches"))
 				)
 			| Call("randomInt", [bound]) -> 
@@ -686,6 +722,7 @@ let run (vars, funcs) =
 				try
 					let globals = call fdecl actuals globals
 					in Boolean(false), (locals, globals)
+(*					in Int(0), (locals, globals)*)
 				with ReturnException(v, globals) -> v, (locals, globals)
 			in
 
