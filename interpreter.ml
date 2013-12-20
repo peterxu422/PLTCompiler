@@ -787,18 +787,48 @@ let run (vars, funcs) =
 				| Return(e) ->
 				let v, (locals, globals) = eval env e in
 				(* find current function type *)
-				let ftype =
+				let ftype1 =
 				  try TypeMap.find !fname func_types
 				  with Not_found -> raise (Failure ("undefined function " ^(!fname)))
 				in
+				let ftype = (match ftype1 with
+								 "intArr"		-> "array"
+								|"doubleArr"	-> "array"
+								|"booleanArr"	-> "array"
+								|"pitchArr"		-> "array"
+								|"soundArr"		-> "array"
+								|"boolean"		-> "bool"
+								| _				-> ftype1)
+				in
+				let farrtype = (match ftype1 with
+								 "intArr"		-> "int"
+								|"doubleArr"	-> "double"
+								|"booleanArr"	-> "bool"
+								|"pitchArr"		-> "pitch"
+								|"soundArr"		-> "sound"
+								|"boolean"		-> "bool"
+								| _				-> ftype1)
+				in
+
 				let rtype = (getType v) in
+				
+				(* if both are arrays, check the type of its elements instead *)
+				let ftype2 = if ftype = "array" && rtype = "array"
+					then
+						farrtype
+					else ftype
+				in
+				let rtype2 = if ftype = "array" && rtype = "array" then
+					(getType (match v with Array(d::_) -> d
+												| _ -> v))
+					else rtype
+				in
 				(* check function type and return type *)
-				if ftype <> rtype then
-					raise(Failure("function type is of "^ftype^" while the return type is of "^rtype))
+				if ftype2 <> rtype2 then
+					raise(Failure("function type is of "^ftype2^" while the return type is of "^rtype2))
 				;
 				raise (ReturnException(v, globals))
 			in  
-
 			(* Enter the function: bind actual values to formal arguments *)
 			let locals = 
 				try List.fold_left2
