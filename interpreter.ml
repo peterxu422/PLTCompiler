@@ -65,7 +65,11 @@ let fname = ref "" ;;
 let run (vars, funcs) =
 	(* Put function declarations in a symbol table *)
 	let func_decls = List.fold_left
-		(fun funcs fdecl -> NameMap.add fdecl.fname fdecl funcs)
+		(fun funcs fdecl -> if (NameMap.mem fdecl.fname funcs)
+							then
+								raise (Failure ("function "^fdecl.fname^" has already been declared"))
+							else
+							NameMap.add fdecl.fname fdecl funcs)
 		NameMap.empty funcs
 	in
 	(* Put function type in a table of function types *)
