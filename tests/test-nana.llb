@@ -1,0 +1,68 @@
+//F : Eb : Bb : Bb/C : F
+void main() {
+    sound FM;
+    sound BbM;
+    sound BbCM;
+    sound EbM;
+
+    sound[] melody;
+    sound[] fprog;
+    sound[] ebprog;
+    sound[] bbprog;
+    sound[] bbcprog;
+    sound[] nana;
+    sound[] gfrepeat;
+    sound[] nanaend;
+ 
+    bpm(80);
+
+    FM = |C5, F4, A4|:0.25:70;
+    BbM = |Bb4, D4, F4|:0.25:70;
+    BbCM = |Bb4, D4, F4, C4, C3|:0.25:70;
+    EbM = |Eb4, G4, Bb4|:0.25:70;
+
+    fprog = [FM];
+    fprog = fprog * 4;
+    ebprog = [EbM];
+    ebprog = ebprog * 4;
+    bbprog = [BbM];
+    bbprog = bbprog * 2;
+    bbcprog = [BbCM];
+    bbcprog = bbcprog * 2;
+
+    nana = [|F5|:0.5:80, |A5|:0.25:80, |C6|:0.25:80];
+    gfrepeat = [|G6|:0.09375:80, |F6|:0.03125:80, |G6|:0.125:80, |F6|:0.75:80,
+                |G6|:0.09375:80, |F6|:0.03125:80, |G6|:0.125:80, |F6|:0.5:80];
+    nana = append(nana, gfrepeat);
+    nanaend = [|D#6|:0.125:80, |D6|:0.125:80, |C6|:1.0:80];
+    nana = append(nana, nanaend);
+    nana = nana * 4;
+
+    melody = append(melody, fprog);
+    melody = append(melody, ebprog);
+    melody = append(melody, bbprog);
+    melody = append(melody, bbcprog);
+    melody = append(melody, fprog);
+    melody = melody * 4;
+
+    mixDown(melody, 0);
+    mixDown(nana, 1);
+}
+
+sound[] append(sound[] a, sound[] b) {
+    int i;
+    int j;
+    int blen;
+
+    i = length(a);
+    j = 0;
+    blen = length(b);
+
+    while(j < blen) {
+        a[i] = b[j];
+        i = i + 1;
+        j = j + 1;
+    }
+
+    return a;
+}
