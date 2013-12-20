@@ -773,10 +773,28 @@ let run (vars, funcs) =
 						| hd :: tl -> let idxlist = idx2::[] in
 							let locals, globals = env in
 							let env = 
-								if NameMap.mem v locals then
-									(NameMap.add v (Index(a,idxlist)) locals, globals)
-								else if NameMap.mem v globals then
-									(locals, NameMap.add v (Index(a,idxlist)) globals)
+								if NameMap.mem v locals
+								then
+									let ev1, _ = eval env (NameMap.find v locals) in
+									let type1 = (getType ev1) in
+									let ev2, _ = eval env (Index(a, [Int(0)])) in
+									let type2 = (getType ev2) in
+									if type1 = type2
+									then
+										(NameMap.add v (Index(a,idxlist)) locals, globals)
+									else 
+										raise (Failure (type1^" is matched with type "^type2))
+								else if NameMap.mem v globals
+								then
+									let ev1, _ = eval env (NameMap.find v globals) in
+									let type1 = (getType ev1) in
+									let ev2, _ = eval env (Index(a, [Int(0)])) in
+									let type2 = (getType ev2) in
+									if type1 = type2
+									then
+										(locals, NameMap.add v (Index(a,idxlist)) globals)
+									else
+										raise (Failure (type1^" is matched with type "^type2))
 								else
 									(stopMixDown(); raise (Failure ("undeclared identifier " ^ v)))
 						    in
