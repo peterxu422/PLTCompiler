@@ -93,7 +93,7 @@ let run (vars, funcs) =
 				in
 				(* type check *)
 				(* make sure array isn't empty *)
-				if evaledExprs = [] then raise (Failure("Cannot initialize empty array"))
+				if evaledExprs = [] then (stopMixDown(); raise (Failure("Cannot initialize empty array")))
 				else
 				(* traverse through the array, make sure every element in the array is the same*)
 				let hd = List.hd evaledExprs in
@@ -101,7 +101,7 @@ let run (vars, funcs) =
 				let rec check = function
 					head::tail -> let v2Type = getType head in
 								  if v1Type = v2Type then check tail
-								  else raise (Failure(v2Type^" in an array of type "^v1Type)) 
+								  else (stopMixDown(); raise (Failure(v2Type^" in an array of type "^v1Type))) 
 					| []	   -> evaledExprs
 				in ignore(check evaledExprs);
 			 	Array(evaledExprs), env
@@ -110,13 +110,13 @@ let run (vars, funcs) =
 				let rec lookup arr indices =
 					let arr = match arr with
 						Array(n) -> n
-						| _ -> raise (Failure(a ^ " is not an array. Cannot access index"))
+						| _ -> (stopMixDown(); raise (Failure(a ^ " is not an array. Cannot access index")))
 					in
 					let index, env = eval env indices in 
 					(match index with 
 						Int(i) -> (try List.nth arr i, env
-							with Failure("nth") -> raise (Failure "Index out of bounds"))
-						| _ -> raise (Failure "Invalid index")
+							with Failure("nth") -> stopMixDown(); raise (Failure "Index out of bounds"))
+						| _ -> stopMixDown(); raise (Failure "Invalid index")
 					)
 				in
 				lookup v (List.hd i)
@@ -126,7 +126,7 @@ let run (vars, funcs) =
 					(NameMap.find var locals), env
 				else if NameMap.mem var globals then
 					(NameMap.find var globals), env
-				else raise (Failure ("undeclared identifier " ^ var))
+				else (stopMixDown(); raise (Failure ("undeclared identifier " ^ var)))
  			| Assign(var, e) ->
 				(* for type check, use Index[0] as reference *)
 				let lvar = (match var with
@@ -183,7 +183,7 @@ let run (vars, funcs) =
 									v, (locals, NameMap.add name v globals)
 								else raise(Failure ("type mismatch: "^v1Type2^" with "^v2Type2))
 							end
-						else raise (Failure ("undeclared identifier " ^ name))
+						else (stopMixDown(); raise (Failure ("undeclared identifier " ^ name)))
 				)
 				| Index(name, indices) -> 
 					let rec getIndex e = 
@@ -193,12 +193,13 @@ let run (vars, funcs) =
 							(*Need to call getIndexFromVar again because function needs to return only 1 value*)
 							| e ->
 								print_endline (string_of_expr e);
+							 	stopMixDown();
 							 	raise (Failure ("Illegal index"))
 					)
 					in
 					let v2Type = (getType v) in
 					let rec setElt exprs = function
-						[] -> raise (Failure ("Cannot assign to empty array"))
+						[] -> (stopMixDown(); raise (Failure ("Cannot assign to empty array")))
 						| hd :: [] -> let idx = getIndex hd in
 							if idx < (List.length exprs) then
 								let arr = (Array.of_list exprs) in arr.(idx) <- v; Array.to_list arr
@@ -210,7 +211,7 @@ let run (vars, funcs) =
 										(initType v2Type))) 
 							in 
 									arr.(idx) <- v; Array.to_list arr
-						| _ -> raise (Failure ("Cannot assign to this array"))
+						| _ -> (stopMixDown(); raise (Failure ("Cannot assign to this array")))
 					in
 					if NameMap.mem name locals then
 						begin
@@ -221,22 +222,22 @@ let run (vars, funcs) =
 							
 							if v1Type = v2Type then
 								v, (NameMap.add name newArray locals, globals)
-							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
+							else (stopMixDown(); raise(Failure ("type mismatch: "^v1Type^" with "^v2Type)))
 						end
 					else if (NameMap.mem name globals) then
 						begin
 							let exprList = (match (NameMap.find name globals) with
 								Array(a) -> a
-								| _ -> raise (Failure (name ^ " is not an array"))) in
+								| _ -> (stopMixDown(); raise (Failure (name ^ " is not an array")))) in
 							let newArray = Array(setElt exprList indices) in
 	
 							if v1Type = v2Type then
 								v, (locals, NameMap.add name newArray globals)
-							else raise(Failure ("type mismatch: "^v1Type^" with "^v2Type))
+							else (stopMixDown(); raise(Failure ("type mismatch: "^v1Type^" with "^v2Type)))
 						end
 					else
-						raise (Failure (name ^ " was not properly initialized as an array"))
-			| _ -> raise (Failure ("Can only assign variables or array indices")))
+						(stopMixDown(); raise (Failure (name ^ " was not properly initialized as an array")))
+			| _ -> (stopMixDown(); raise (Failure ("Can only assign variables or array indices"))))
 
 			(* binop operators *)
 			| Binop(e1, op, e2) ->
@@ -257,30 +258,30 @@ let run (vars, funcs) =
 							Double(d2) -> Double (float_of_int i1 +. d2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 + pitchToInt p2))
 							| Int(i2) -> Int (i1 + i2)
-							| _ -> raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Double (d1 +. (float_of_int i2))
 							| Double(d2) -> Double (d1 +. d2)
-							| _ -> raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Int(i2) -> Pitch (intToPitch(pitchToInt p1 + i2))
-							| _ -> raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " + " ^ v2Type ^ " is not a valid operation")))
 					(* v1 - v2 *)
 					| Sub -> (match v1 with
 						Int(i1) -> (match v2 with
 							Double(d2) -> Double (float_of_int i1 -. d2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 - pitchToInt p2))
 							| Int(i2) -> Int (i1 - i2)
-							| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Double (d1 -. float_of_int i2)
 							| Double(d2) -> Double (d1 -. d2)
-							| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Int(i2) -> Pitch (intToPitch(pitchToInt p1 - i2))
-							| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " - " ^ v2Type ^ " is not a valid operation")))
 					(* v1 * v2 *)
 					| Mult ->
 						(* Used for the array * int and int * array operations *)
@@ -295,172 +296,172 @@ let run (vars, funcs) =
 							| Double(d2) -> Double (float_of_int i1 *. d2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 * pitchToInt p2))
 							| Int(i2) -> Int (i1 * i2)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Sound(p,d,a) -> Sound(p,d1 *. d, a)
 							| Int(i2) -> Double (d1 *. float_of_int i2)
 							| Double(d2) -> Double (d1 *. d2)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Int(i2) -> Pitch (intToPitch(pitchToInt p1 * i2))
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 						| Sound(p,d,a) -> (match v2 with
 							Int(i2) -> Sound(p,d *. float_of_int i2,a)
 							| Double(d2) -> Sound(p,d *. d2,a)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 						| Array(a) -> (match v2 with
 							Int(i2) -> Array (buildList a i2)
-							| _ -> raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
-					  | _ ->raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
+					  | _ -> stopMixDown(); raise (Failure (v1Type ^ " * " ^ v2Type ^ " is not a valid operation")))
 					(* v1 / v2 *)
 					| Div -> (match v1 with
 						Int(i1) -> (match v2 with
 							Double(d2) -> Double (float_of_int i1 /. d2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 / pitchToInt p2))
 							| Int(i2) -> Int (i1 / i2)
-							| _ -> raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Double (d1 /. float_of_int i2)
 							| Double(d2) -> Double (d1 /. d2)
-							| _ -> raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Int(i2) -> Pitch (intToPitch(pitchToInt p1 / i2))
 							| _ -> raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
 					(* v1 % v2 *)
 					| Mod -> (match v1 with
 						Int(i1) -> (match v2 with
 							Int(i2) -> Int (i1 mod i2)
 							| Pitch(p2) -> Pitch (intToPitch(i1 mod pitchToInt p2))
-							| _ -> raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Int(i2) -> Pitch (intToPitch(pitchToInt p1 mod i2))
-							| _ -> raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " % " ^ v2Type ^ " is not a valid operation")))
 					(* v1 || v2 *)
 					| Or -> 
 						if v1Type = "bool" && v2Type = "bool" then
 							Boolean (getBoolean v1 || getBoolean v2)
-						else raise (Failure (v1Type ^ " || " ^ v2Type ^ " is not a valid operation"))
+						else (stopMixDown(); raise (Failure (v1Type ^ " || " ^ v2Type ^ " is not a valid operation")))
 					(* v1 && v2 *)
 					| And -> 
 						if v1Type = "bool" && v2Type = "bool" then
 							Boolean (getBoolean v1 && getBoolean v2)
-						else raise (Failure (v1Type ^ " && " ^ v2Type ^ " is not a valid operation"))
+						else (stopMixDown(); raise (Failure (v1Type ^ " && " ^ v2Type ^ " is not a valid operation")))
 					(* v1 == v2 *)
 					| Eq -> (match v1 with
 						Int(i1) -> (match v2 with
 							Double(d2) -> Boolean (float_of_int i1 = d2)
 							| Pitch(p2) -> Boolean (i1 = pitchToInt p2)
 							| Int(i2) -> Boolean (i1 = i2)
-							| _ -> raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Boolean (d1 = float_of_int i2)
 							| Double(d2) -> Boolean (d1 = d2)
-							| _ -> raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Pitch(p2) -> Boolean (pitchToInt p1 = pitchToInt p2)
 							| Int(i2) -> Boolean (pitchToInt p1 = i2)
-							| _ -> raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
 						| Boolean(b1) -> (match v2 with
 							Boolean(b2) -> Boolean (b1 = b2)
 							| _ -> raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " == " ^ v2Type ^ " is not a valid operation")))
 					(* v1 != v2 *)
 					| Neq -> (match v1 with
 						Int(i1) -> (match v2 with
 							Double(d2) -> Boolean (float_of_int i1 <> d2)
 							| Pitch(p2) -> Boolean (i1 <> pitchToInt p2)
 							| Int(i2) -> Boolean (i1 <> i2)
-							| _ -> raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Boolean (d1 <> float_of_int i2)
 							| Double(d2) -> Boolean (d1 <> d2)
-							| _ -> raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Pitch(p2) -> Boolean (pitchToInt p1 <> pitchToInt p2)
 							| Int(i2) -> Boolean (pitchToInt p1 <> i2)
-							| _ -> raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
 						| Boolean(b1) -> (match v2 with
 							Boolean(b2) -> Boolean (b1 <> b2)
-							| _ -> raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " != " ^ v2Type ^ " is not a valid operation")))
 					(* v1 < v2 *)
 					| Lt -> (match v1 with
 						Int(i1) -> (match v2 with
 							Double(d2) -> Boolean (float_of_int i1 < d2)
 							| Pitch(p2) -> Boolean (i1 < pitchToInt p2)
 							| Int(i2) -> Boolean (i1 < i2)
-							| _ -> raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Boolean (d1 < float_of_int i2)
 							| Double(d2) -> Boolean (d1 < d2)
-							| _ -> raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Pitch(p2) -> Boolean (pitchToInt p1 < pitchToInt p2)
 							| Int(i2) -> Boolean (pitchToInt p1 < i2)
-							| _ -> raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
 						| Boolean(b1) -> (match v2 with
 							Boolean(b2) -> Boolean (b1 < b2)
-							| _ -> raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " < " ^ v2Type ^ " is not a valid operation")))
 					(* v1 > v2 *)
 					| Gt -> (match v1 with
 						Int(i1) -> (match v2 with
 							Double(d2) -> Boolean (float_of_int i1 > d2)
 							| Pitch(p2) -> Boolean (i1 > pitchToInt p2)
 							| Int(i2) -> Boolean (i1 > i2)
-							| _ -> raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Boolean (d1 > float_of_int i2)
 							| Double(d2) -> Boolean (d1 > d2)
-							| _ -> raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Pitch(p2) -> Boolean (pitchToInt p1 > pitchToInt p2)
 							| Int(i2) -> Boolean (pitchToInt p1 > i2)
-							| _ -> raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
 						| Boolean(b1) -> (match v2 with
 							Boolean(b2) -> Boolean (b1 > b2)
-							| _ -> raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " > " ^ v2Type ^ " is not a valid operation")))
 					(* v1 <= v2 *)
 					| Leq -> (match v1 with
 						Int(i1) -> (match v2 with
 							Double(d2) -> Boolean (float_of_int i1 <= d2)
 							| Pitch(p2) -> Boolean (i1 <= pitchToInt p2)
 							| Int(i2) -> Boolean (i1 <= i2)
-							| _ -> raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Boolean (d1 <= float_of_int i2)
 							| Double(d2) -> Boolean (d1 <= d2)
-							| _ -> raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Pitch(p2) -> Boolean (pitchToInt p1 <= pitchToInt p2)
 							| Int(i2) -> Boolean (pitchToInt p1 <= i2)
-							| _ -> raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
 						| Boolean(b1) -> (match v2 with
 							Boolean(b2) -> Boolean (b1 <= b2)
 							| _ -> raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " <= " ^ v2Type ^ " is not a valid operation")))
 					(* v1 >= v2 *)
 					| Geq -> (match v1 with
 						Int(i1) -> (match v2 with
 							Double(d2) -> Boolean (float_of_int i1 >= d2)
 							| Pitch(p2) -> Boolean (i1 >= pitchToInt p2)
 							| Int(i2) -> Boolean (i1 >= i2)
-							| _ -> raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
 						| Double(d1) -> (match v2 with
 							Int(i2) -> Boolean (d1 >= float_of_int i2)
 							| Double(d2) -> Boolean (d1 >= d2)
-							| _ -> raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
 						| Pitch(p1) -> (match v2 with
 							Pitch(p2) -> Boolean (pitchToInt p1 >= pitchToInt p2)
 							| Int(i2) -> Boolean (pitchToInt p1 >= i2)
-							| _ -> raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
+							| _ -> stopMixDown(); raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
 						| Boolean(b1) -> (match v2 with
 							Boolean(b2) -> Boolean (b1 >= b2)
 							| _ -> raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
-						| _ -> raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
+						| _ -> stopMixDown(); raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
 					), env
 
 				(* !e *)
@@ -469,7 +470,7 @@ let run (vars, funcs) =
 					let vType = getType v in
 					(match v with
 					Boolean(b) -> Boolean (not b), env
-					| _ -> raise (Failure (vType ^ " has no ! operator")))
+					| _ -> stopMixDown(); raise (Failure (vType ^ " has no ! operator")))
 
 				(* -e *)
 				| Neg(e) ->
@@ -478,7 +479,7 @@ let run (vars, funcs) =
 					(match v with
 					Int(i) -> Int (0 - i), env
 					| Double(d) -> Double (0. -. d), env
-					| _ -> raise (Failure (vType ^ " has no - operator")))
+					| _ -> stopMixDown(); raise (Failure (vType ^ " has no - operator")))
 			
 			| Call("setDuration", actuals) -> 
 				let actuals, env = List.fold_left
@@ -486,15 +487,15 @@ let run (vars, funcs) =
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in if (List.length actuals != 2)
-				then raise(Failure("setDuration takes a sound and a double"))
+				then (stopMixDown(); raise(Failure("setDuration takes a sound and a double")))
 				else let newDuration = 
 					(match (List.nth actuals 1) with
 						Double(d) -> d
 						| Index(a,i) -> 
 							(match eval env (Index(a,i)) with
 								Double(d),_ -> d
-								| _,_ -> raise (Failure ("Second argument must evaluate to a double")) )
-						| _ -> raise (Failure ("Second argument must evaluate to a double"))
+								| _,_ -> stopMixDown(); raise (Failure ("Second argument must evaluate to a double")) )
+						| _ -> stopMixDown(); raise (Failure ("Second argument must evaluate to a double"))
 					)
 				in  
 				(match (List.hd actuals) with
@@ -502,8 +503,8 @@ let run (vars, funcs) =
 					| Index(a,i) -> 
 						(match eval env (Index(a,i)) with
 							Sound(p,d,a),_ -> Sound(p,newDuration,a), env
-							| _,_ -> raise (Failure ("First argument must be a sound")) )
-					| _ -> raise (Failure ("First argument must be a sound"))
+							| _,_ -> stopMixDown(); raise (Failure ("First argument must be a sound")) )
+					| _ -> stopMixDown(); raise (Failure ("First argument must be a sound"))
 				)
 			| Call("setAmplitude", actuals) ->
 				let actuals, env = List.fold_left
@@ -511,15 +512,15 @@ let run (vars, funcs) =
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in if (List.length actuals != 2)
-				then raise(Failure("setAmplitude takes a sound and an integer"))
+				then (stopMixDown(); raise(Failure("setAmplitude takes a sound and an integer")))
 				else let newAmplitude = 
 					(match (List.nth actuals 1) with
 						Int(i) -> i
 						| Index(a,i) -> 
 							(match eval env (Index(a,i)) with
 								Int(i),_ -> i
-								| _,_ -> raise (Failure ("Second argument must evaluate to an integer")) )
-						| _ -> raise (Failure ("Second argument must evaluate to an integer"))
+								| _,_ -> stopMixDown(); raise (Failure ("Second argument must evaluate to an integer")) )
+						| _ -> stopMixDown(); raise (Failure ("Second argument must evaluate to an integer"))
 					)
 				in  
 				(match (List.hd actuals) with
@@ -527,8 +528,8 @@ let run (vars, funcs) =
 					| Index(a,i) -> 
 						(match eval env (Index(a,i)) with
 							Sound(p,d,a),_ -> Sound(p,d,newAmplitude), env
-							| _,_ -> raise (Failure ("First argument must be a sound")) )
-					| _ -> raise (Failure ("First argument must be a sound"))
+							| _,_ -> stopMixDown(); raise (Failure ("First argument must be a sound")) )
+					| _ -> stopMixDown(); raise (Failure ("First argument must be a sound"))
 				)
 			| Call("setPitches", actuals) ->
 				let actuals, env = List.fold_left
@@ -545,8 +546,8 @@ let run (vars, funcs) =
 							(match eval env (Index(a,i)) with
 								Array(i),_ -> List.rev (List.map (fun e -> string_of_expr e) i)
 								| Pitch(p),_ -> p::[]
-								| _,_ -> raise (Failure ("Second argument must be an array of pitches")) )
-						| _ -> raise (Failure ("Second argument must be an array of pitches"))
+								| _,_ -> stopMixDown(); raise (Failure ("Second argument must be an array of pitches")) )
+						| _ -> stopMixDown(); raise (Failure ("Second argument must be an array of pitches"))
 					)
 				in  
 				(match (List.hd actuals) with
@@ -554,8 +555,8 @@ let run (vars, funcs) =
 					| Index(a,i) -> 
 						(match eval env (Index(a,i)) with
 							Sound(p,d,a),_ -> Sound(newPitches,d,a), env
-							| _,_ -> raise (Failure ("First argument must be a sound")) )
-					| _ -> raise (Failure ("First argument must be a sound"))
+							| _,_ -> stopMixDown(); raise (Failure ("First argument must be a sound")) )
+					| _ -> stopMixDown(); raise (Failure ("First argument must be a sound"))
 				)
 			| Call("print", [e]) -> 
 				let v, env = 
@@ -573,10 +574,10 @@ let run (vars, funcs) =
 					| Array(a) -> let rec build = function
 							hd :: [] -> (print hd)
 							| hd :: tl -> ((print hd) ^ ", " ^ (build tl))
-							| _ -> raise (Failure ("Item cannot be printed"))
+							| _ -> stopMixDown(); raise (Failure ("Item cannot be printed"))
 						in
 						"[" ^ build a ^ "]"
-					| _ -> raise (Failure ("Item cannot be printed"))
+					| _ -> stopMixDown(); raise (Failure ("Item cannot be printed"))
 				in
 					print_endline (print v);
 					Int(0), env
@@ -597,7 +598,7 @@ let run (vars, funcs) =
 							Failure _ -> raise (stopMixDown(); Failure ("Invalid mixdown args. mixdown(<Array of Sounds or Sound>, <optional, Int, track_num, 0 - 15>")));
 						track_number := (Ast.string_of_expr (List.hd (List.tl actuals)));
 						if (((int_of_string !track_number) > 15) || ((int_of_string !track_number) < 0)) then 
-							raise (Failure ("Invalid track_num in mixdown. track_num should be 0 - 15"))
+							(stopMixDown(); raise (Failure ("Invalid track_num in mixdown. track_num should be 0 - 15")))
 					end;
 				if List.length actuals > 2 then
 					begin
@@ -639,8 +640,8 @@ let run (vars, funcs) =
 					  | Index(a,i) -> 
 						(match eval env (Index(a,i)) with
 							Sound(p,d,a),_ -> Int(a), env
-							| _,_ -> raise (Failure ("getAmplitude can only be called on sounds")) )
-					| _ -> raise (Failure ("getAmplitude can only be called on sounds"))
+							| _,_ -> stopMixDown(); raise (Failure ("getAmplitude can only be called on sounds")) )
+					| _ -> stopMixDown(); raise (Failure ("getAmplitude can only be called on sounds"))
 				)
 			(* for sounds *)
 			| Call("getDuration", [e]) ->
@@ -650,8 +651,8 @@ let run (vars, funcs) =
 					  | Index(a,i) -> 
 						(match eval env (Index(a,i)) with
 							Sound(p,d,a),_ -> Double(d), env
-							| _,_ -> raise (Failure ("getDuration can only be called on sounds")) )
-					| _ -> raise (Failure ("getDuration can only be called on sounds"))
+							| _,_ -> stopMixDown(); raise (Failure ("getDuration can only be called on sounds")) )
+					| _ -> stopMixDown(); raise (Failure ("getDuration can only be called on sounds"))
 				)
 			(* for pitches and sounds *)
 			| Call("getPitches", [e]) ->
@@ -661,7 +662,7 @@ let run (vars, funcs) =
 					  let rec strings_to_pitches = function
 					  		  hd :: [] -> [Pitch(hd)]
 					  		| hd :: tl -> [Pitch(hd)] @ strings_to_pitches tl
-					  		| _ -> raise (Failure ("getPitches can only be called on sounds with pitches"))
+					  		| _ -> stopMixDown(); raise (Failure ("getPitches can only be called on sounds with pitches"))
 					  in
 					  Array(List.rev(strings_to_pitches p)), env
 					| Pitch(p) -> Pitch(p), env
@@ -671,30 +672,30 @@ let run (vars, funcs) =
 							let rec strings_to_pitches = function
 								  hd :: [] -> [Pitch(hd)]
 								| hd :: tl -> [Pitch(hd)] @ strings_to_pitches tl
-								| _ -> raise (Failure ("getPitches can only be called on sounds with pitches"))
+								| _ -> stopMixDown(); raise (Failure ("getPitches can only be called on sounds with pitches"))
 							 in
 							 Array(List.rev(strings_to_pitches p)), env
-							| _,_ -> raise (Failure ("getPitches can only be called on sounds or pitches")) )
-					| _ -> raise (Failure ("getPitches can only be called on sounds or pitches"))
+							| _,_ -> stopMixDown(); raise (Failure ("getPitches can only be called on sounds or pitches")) )
+					| _ -> stopMixDown(); raise (Failure ("getPitches can only be called on sounds or pitches"))
 				)
 			| Call("randomInt", [bound]) -> 
 				let v, env = eval env bound in
 				(match v with
 					  Int(i) -> Int(Random.int i), env
-					| _ -> raise (Failure ("argument must be an int"))
+					| _ -> stopMixDown(); raise (Failure ("argument must be an int"))
 				)
 			| Call("randomDouble", [bound]) ->
 				let v, env = eval env bound in
 				(match v with
 					  Double(d) -> Double(Random.float d), env
-					| _ -> raise (Failure ("argument must be a double"))
+					| _ -> stopMixDown(); raise (Failure ("argument must be a double"))
 				)
 			(* for arrays eyes only *)
 			| Call("length", [e]) -> 
 				let v, env = eval env e in
 				(match v with
 					  Array(a) -> Int(List.length a), env
-					| _ -> raise (Failure ("Length can only be called on arrays"))
+					| _ -> stopMixDown(); raise (Failure ("Length can only be called on arrays"))
 				)
 			(* sets the bpm *)
 			| Call("bpm", actuals) -> 
@@ -703,10 +704,10 @@ let run (vars, funcs) =
 					let v, env = eval env actual in v :: actuals, env)
 					([], env) (List.rev actuals)
 				in
-					if !first_mixdown_flag != false then raise (Failure ("Bpm must be set before mixdown is called to take affect"));
-					if List.length actuals != 1 then raise (Failure ("One argument must be passed to bpm"));
+					if !first_mixdown_flag != false then (stopMixDown(); raise (Failure ("Bpm must be set before mixdown is called to take affect")));
+					if List.length actuals != 1 then (stopMixDown(); raise (Failure ("One argument must be passed to bpm")));
 					ignore(try (int_of_string (Ast.string_of_expr (List.hd actuals))) with
-						Failure _ -> raise (Failure ("int must be passed to bpm. 40 - 300 is suggested")));
+						Failure _ -> stopMixDown(); raise (Failure ("int must be passed to bpm. 40 - 300 is suggested")));
 					bpm := (int_of_string (Ast.string_of_expr (List.hd actuals)));
 					Int(0), env
 			(* midi is only written and not played *)
@@ -722,12 +723,12 @@ let run (vars, funcs) =
 				fname := f;
 				let fdecl =
 				  try NameMap.find f func_decls
-				  with Not_found -> raise (Failure ("undefined function " ^ f))
+				  with Not_found -> stopMixDown(); raise (Failure ("undefined function " ^ f))
 				in
 				(* get function type for initializing function return value *)
 				let ftype =
 				  try TypeMap.find f func_types
-				  with Not_found -> raise (Failure ("undefined function " ^f))
+				  with Not_found -> stopMixDown(); raise (Failure ("undefined function " ^f))
 				in
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
@@ -773,7 +774,7 @@ let run (vars, funcs) =
 								else if NameMap.mem v globals then
 									(locals, NameMap.add v (Index(a,idxlist)) globals)
 								else
-									raise (Failure ("undeclared identifier " ^ v))
+									(stopMixDown(); raise (Failure ("undeclared identifier " ^ v)))
 						    in
 							let env = exec env s in match idx2 with
 								Int(i) -> runloop env (Int(i+1)) tl
@@ -782,14 +783,14 @@ let run (vars, funcs) =
 					let arr, _ = eval env (Id(a)) in
 					(match arr with 
 						Array(x) -> runloop env (Int(0)) x
-						| _ -> raise (Failure ("Looping on array was expected")))
+						| _ -> stopMixDown(); raise (Failure ("Looping on array was expected")))
 
 				| Return(e) ->
 				let v, (locals, globals) = eval env e in
 				(* find current function type *)
 				let ftype1 =
 				  try TypeMap.find !fname func_types
-				  with Not_found -> raise (Failure ("undefined function " ^(!fname)))
+				  with Not_found -> stopMixDown(); raise (Failure ("undefined function " ^(!fname)))
 				in
 				let ftype = (match ftype1 with
 								 "intArr"		-> "array"
@@ -825,7 +826,7 @@ let run (vars, funcs) =
 				in
 				(* check function type and return type *)
 				if ftype2 <> rtype2 then
-					raise(Failure("function type is of "^ftype2^" while the return type is of "^rtype2))
+					(stopMixDown(); raise(Failure("function type is of "^ftype2^" while the return type is of "^rtype2)))
 				;
 				raise (ReturnException(v, globals))
 			in  
@@ -834,7 +835,7 @@ let run (vars, funcs) =
 				try List.fold_left2
 					(fun locals formal actual -> NameMap.add formal.paramname actual locals) NameMap.empty fdecl.formals actuals
 				with Invalid_argument(_) ->
-					raise (Failure ("wrong number of arguments to: " ^ fdecl.fname))
+					(stopMixDown(); raise (Failure ("wrong number of arguments to: " ^ fdecl.fname)))
 			in
 			let locals = List.fold_left (* init locals to 0 *)
 				(fun locals local -> NameMap.add local.varname (initType local.vartype) locals) locals fdecl.locals
@@ -845,7 +846,7 @@ let run (vars, funcs) =
 			(fun globals vdecl -> NameMap.add vdecl.varname (initType vdecl.vartype) globals) NameMap.empty vars
 		in try
 			call (NameMap.find "main" func_decls) [] globals
-		with Not_found -> raise (Failure("did not find the main() function"))
+		with Not_found -> (stopMixDown(); raise (Failure("did not find the main() function")))
 
 let _ = 
 	let lexbuf = Lexing.from_channel stdin in 
