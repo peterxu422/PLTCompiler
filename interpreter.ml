@@ -41,6 +41,7 @@ let initType t =
 	| "soundArr" -> Array([Sound(["C0"], 0., 0)])
     | _ -> Boolean(false)
 
+(* if mixdown is not called, bytecode has x\n to indicate to BytecodeTranslator that it shouldn't attempt to play/write MIDI *)
 let stopMixDown () = 
 	let file = "bytecode" in
 		let oc = open_out file in
@@ -51,7 +52,7 @@ let stopMixDown () =
 let first_mixdown_flag = ref false;;
 (* default bpm value *)
 let bpm = ref 220;;
-(* if mixdown is not called, bytecode has x\n to indicate to BytecodeTranslator that it shouldn't attempt to play/write MIDI *)
+let opt = ref "b";; 
 
 let run (vars, funcs) =
 	(* Put function declarations in a symbol table *)
@@ -553,7 +554,6 @@ let run (vars, funcs) =
 							| _,_ -> raise (Failure ("First argument must be a sound")) )
 					| _ -> raise (Failure ("First argument must be a sound"))
 				)
-			(* our special print function, only supports ints right now *)
 			| Call("print", [e]) -> 
 				let v, env = 
 					(match eval env e with
@@ -615,7 +615,7 @@ let run (vars, funcs) =
 					if !first_mixdown_flag = false then
 						begin
 							let oc = open_out file in
-								fprintf oc "%s\n" (string_of_int !bpm);
+								fprintf oc "%s %s\n" (string_of_int !bpm) !opt;
 								fprintf oc "%s\n" (!track_number ^ (writeByteCode (List.hd actuals)));
 								close_out oc
 						end 
@@ -625,7 +625,7 @@ let run (vars, funcs) =
 								output_string oc (!track_number ^ (writeByteCode (List.hd actuals)) ^ "\n");
 								close_out oc
 						end;
-					print_endline ("Mixing down track " ^ !track_number);
+					(* print_endline ("Mixing down track " ^ !track_number); *)
 					first_mixdown_flag := true;
 					Int(0), env
 			(* for pitches and sounds *)
@@ -687,7 +687,7 @@ let run (vars, funcs) =
 					| _ -> raise (Failure ("argument must be a double"))
 				)
 			(* for arrays eyes only *)
-			| Call("length",[e]) -> 
+			| Call("length", [e]) -> 
 				let v, env = eval env e in
 				(match v with
 					  Array(a) -> Int(List.length a), env
@@ -706,6 +706,14 @@ let run (vars, funcs) =
 						Failure _ -> raise (Failure ("int must be passed to bpm. 40 - 300 is suggested")));
 					bpm := (int_of_string (Ast.string_of_expr (List.hd actuals)));
 					Int(0), env
+			(* midi is only written and not played *)
+			| Call("write", []) ->
+				opt := "w";
+				Int(0), env
+			(* midi is only played and not written *)
+			| Call("play", []) ->
+				opt := "p";
+				Int(0), env
 			(* this does function calls. *)
 			| Call(f, actuals) -> 
 				let fdecl =
