@@ -21,6 +21,8 @@ public class BytecodeTranslator {
 		String byteCode = "";
 		String[] tracks = new String[16];
 		String[] mixDownWrites;
+		String[] firstLine;
+		String option = "";
 
 		try {
 
@@ -33,7 +35,9 @@ public class BytecodeTranslator {
 						//System.err.println("Lullabyte file failed or mixdown was not called.");
 						System.exit(0);
 					}
-					tempo = tempo + currentLine + " ";
+					firstLine = currentLine.split(" ");
+					tempo = tempo + firstLine[0] + " ";
+					option = firstLine[1];
 				} else {
 					byteCode += currentLine.charAt(0) + currentLine.substring(2, currentLine.length()-1) + "\n";	
 				}
@@ -103,8 +107,19 @@ public class BytecodeTranslator {
 
 			midiWrite = tempo + midiWrite;
 			p.add(midiWrite);
-			player.saveMidi(p, new File(midiFileName)); 
-			player.play(p);
+			if(option.equals("w")){
+				System.out.println("Writing tracks to midi file");
+				player.saveMidi(p, new File(midiFileName)); 
+			}
+			if(option.equals("p")){
+				System.out.println("Playing llb tracks");
+				player.play(p);
+			}
+			if(option.equals("b")){
+				System.out.println("Writing and playing midi file");
+				player.saveMidi(p, new File(midiFileName)); 
+				player.play(p);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
