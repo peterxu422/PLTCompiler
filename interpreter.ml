@@ -51,7 +51,7 @@ let stopMixDown () =
 (* global mixdown flag to see if mixdown has been called in which case we should append, not re write a file *)
 let first_mixdown_flag = ref false;;
 (* default bpm value *)
-let bpm = ref 220;;
+let bpm = ref 120;;
 let opt = ref "b";; 
 
 let run (vars, funcs) =
@@ -451,8 +451,6 @@ let run (vars, funcs) =
 						| _ -> raise (Failure (v1Type ^ " >= " ^ v2Type ^ " is not a valid operation")))
 					), env
 
-				(* else raise (Failure ("Types " ^ v1Type ^ " and " ^ v2Type ^ " do not match")) *)
-
 				(* !e *)
 				| Not(e) ->
 					let v, env = eval env e in
@@ -722,7 +720,6 @@ let run (vars, funcs) =
 				try
 					let globals = call fdecl actuals globals
 					in Boolean(false), (locals, globals)
-(*					in Int(0), (locals, globals)*)
 				with ReturnException(v, globals) -> v, (locals, globals)
 			in
 
@@ -748,16 +745,6 @@ let run (vars, funcs) =
 						else
 							env
 					in loop env
-				(*| Loop(v, a, s) -> 
-                    let rec runloop env = function
-                        [] -> env
-                        | hd :: tl -> let var, env = eval env (Assign(v, hd)) in
-							let env = exec env s in runloop env tl
-                            in 
-                            let arr, _ = eval env a in
-                            (match arr with 
-                                Array(x) -> runloop env x)
-								*)
 				| Loop(v, a, s) -> 
 					let rec runloop env idx2 = function
 						[] -> env
@@ -794,15 +781,11 @@ let run (vars, funcs) =
 			let locals = List.fold_left (* init locals to 0 *)
 				(fun locals local -> NameMap.add local.varname (initType local.vartype) locals) locals fdecl.locals
 			in
-			(* this should actually take in env eventually. I think
-			   that the fold left will accumulate (locals, globals),
-			   which will be returned by stuff above*)
 	    	snd (List.fold_left exec (locals, globals) fdecl.body)
 
 		in let globals = List.fold_left
 			(fun globals vdecl -> NameMap.add vdecl.varname (initType vdecl.vartype) globals) NameMap.empty vars
 		in try
-		(* needs globals i think *)
 			call (NameMap.find "main" func_decls) [] globals
 		with Not_found -> raise (Failure("did not find the main() function"))
 
@@ -811,5 +794,3 @@ let _ =
 	let program = Parser.program Scanner.token lexbuf in
 	stopMixDown();
 	run program
-
-		(*print_endline (Ast.string_of_program program)*)
