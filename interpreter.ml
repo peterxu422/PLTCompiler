@@ -553,7 +553,7 @@ let run (vars, funcs) =
 					print_endline (print v);
 					Int(0), env
 
-			| Call ("mixdown", actuals) ->
+			| Call ("mixDown", actuals) ->
 				let track_number = ref "0" in (*default track number if not specified*)
 				let actuals, env = List.fold_left
 					(fun (actuals, env) actual ->
