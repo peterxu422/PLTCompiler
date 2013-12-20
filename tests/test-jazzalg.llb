@@ -1,0 +1,117 @@
+void main(){
+	sound[] blues_notes;
+	sound Gmin;
+	sound CM;
+	sound[] GmthenC;
+	pitch root;
+	root = G4;
+	Gmin = |G3, D4, Bb4|:1.0:100;
+	CM = |C3, G3, E4|:1.0:100;
+
+	GmthenC = [Gmin, CM];
+	GmthenC = GmthenC * 4;
+
+	blues_notes = randomBluesWalk(root, 7.0); 
+	play();
+	bpm(120);
+	mixDown(blues_notes, 0);
+	mixDown(GmthenC, 1);
+}
+
+sound[] concatArrays(sound[] one, sound[] two){
+	sound[] out;
+	int i;
+	int offset;
+	offset = length(one);
+	for (i = 0; i < length(two); i = i+1){
+		one[i+offset] = two[i];
+	}
+	return one;
+}
+
+sound[] randomBluesWalk(pitch p, double measures){
+	sound[] buildSounds;
+	int[] blues;
+	double[] dbls;
+	sound s;
+	int random;
+	int durationRandom;
+	int restRandom;
+	pitch newPitch;
+	double newDouble;
+	int jump;
+	int i;
+	int dblJump;
+	int addSub;
+	int count;
+	double measure;
+
+	measure = 0.0;
+	s = setAmplitude(s, 100);
+	jump = 6;
+	blues = [0, 3, 5, 6, 7, 10, 
+		     12, 15, 17, 18, 19, 22,
+		     24, 27, 29, 30, 31, 34];
+	dbls = [1.0/2.0, 1.0/4.0, 1.0/8.0, 1.0/4.0, 1.0/8.0, 1.0/4.0, 1.0/2.0];
+
+	while (measure <= measures){
+		random = randomInt(3);
+		durationRandom = randomInt(3);
+		restRandom = randomInt(6);
+
+		//change directions
+		if(i%2 == 0){
+			addSub = randomInt(2);
+		}
+		
+		//skip to the next duration and pitch
+		if(addSub == 0){
+			jump = jump - random;
+			dblJump = dblJump - durationRandom;
+		} else {
+			jump = jump + random;
+			dblJump = dblJump + durationRandom;
+		}		
+		
+		//index out of bounds, bounce back
+		if(jump > (length(blues)-1) ){
+			jump = jump - 2 * random;
+		}
+		if(jump < 0){
+			jump = jump + 2 * random;
+		}
+		if(dblJump > (length(dbls) -1)){
+			dblJump = dblJump - durationRandom;
+		}
+		if(dblJump < 0){
+			dblJump = dblJump + durationRandom;
+		}
+
+		newPitch = p + blues[jump];
+		newDouble = dbls[dblJump];
+
+		s = setPitches(s, [newPitch]);
+		s = setDuration(s, newDouble);
+		
+		if(restRandom == 0){
+			s = setAmplitude(s, 0);
+		} else {
+			s = setAmplitude(s, 100);
+		}
+
+		if(newDouble == (1.0/8.0)){
+			buildSounds[count] = s;
+			buildSounds[count +1] = s;
+			count = count + 2;
+			measure = measure + (2 * newDouble);
+		} else {
+			buildSounds[count] = s;
+			count = count + 1;
+			measure = measure + newDouble;
+		}
+		i = i + 1;		
+		//print(jump);
+		//print(measure);
+	}
+	return buildSounds;
+}
