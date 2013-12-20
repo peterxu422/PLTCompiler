@@ -85,8 +85,8 @@ void main(){
 
 	// print(melody);
 	// print(acc);
-	mixdown(melody, 0);
-	mixdown(acc, 1);
+	mixDown(melody, 0);
+	mixDown(acc, 1);
 }
 
 sound quart(pitch p){

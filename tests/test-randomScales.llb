@@ -92,7 +92,7 @@ void main (){
 	FthenC = concatArrays([FM]*2, [C7M]*8);
 	// print(FthenC);
 	// mixdown(acc);
-	mixdown(FthenC*2, 0);
+	mixDown(FthenC*2, 0);
 	
 
 
@@ -106,5 +106,5 @@ void main (){
 
 
 	// print(a);
-	mixdown(a, 1);
+	mixDown(a, 1);
 }
