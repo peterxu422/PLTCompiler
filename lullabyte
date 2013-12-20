@@ -2,6 +2,9 @@
 #./lullabtye MyMusic.llb MyMusicMidi.mid
 if [ $# -gt 0 ] && [ $# -lt 3 ]
 then
+	#java exits on 
+	touch bytecode
+	echo 'x' > bytecode
 	./interpret < $1
 
 	if [ ! -z $2 ]
