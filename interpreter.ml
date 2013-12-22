@@ -332,6 +332,12 @@ let run (vars, funcs) =
 							Int(i2) -> Pitch (intToPitch(pitchToInt p1 / i2))
 							| _ -> raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
 						| _ -> stopMixDown(); raise (Failure (v1Type ^ " / " ^ v2Type ^ " is not a valid operation")))
+					(* v1 & v2 *)
+					| Join -> (match v1 with
+						Array(a1) -> (match v2 with
+							Array(a2) -> Array (a1 @ a2)
+							| _ -> raise (Failure (v1Type ^ " & " ^ v2Type ^ " is not a valid operation")))
+						| _ -> raise (Failure (v1Type ^ " & " ^ v2Type ^ " is not a valid operation")))
 					(* v1 % v2 *)
 					| Mod -> (match v1 with
 						Int(i1) -> (match v2 with

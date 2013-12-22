@@ -8,7 +8,7 @@ let parse_error s = (* Called by the parser function on error *)
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA COLON PIPE
 %token INT DOUBLE PITCH BOOLEAN SOUND VOID EOF
-%token PLUS MINUS TIMES DIVIDE PERCENT NOT NEG
+%token PLUS MINUS TIMES DIVIDE PERCENT AMPERSAND NOT NEG
 %token OR AND EQ NEQ LT GT LEQ GEQ
 %token RETURN IF ELSE FOR WHILE LOOP
 
@@ -30,6 +30,7 @@ let parse_error s = (* Called by the parser function on error *)
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
+%left AMPERSAND
 %left PERCENT
 %left NOT NEG
 
@@ -71,15 +72,6 @@ vdecl_list:
 vdecl: 
      DATATYPE ID SEMI { {varname = $2; vartype = $1} }
 
-
-
-/*
-arr_decl:
-	DATATYPE LBRACK RBRACK ID SEMI
-	{ { arrtype = $1;
-		arrname = $4 } }
-*/
-
 stmt_list:
 	/* nothing */ { [] }
 	| stmt_list stmt { $2 :: $1 }
@@ -107,20 +99,21 @@ expr:
   | LBRACK actuals_opt RBRACK           { Array($2) }
   | expr ASSIGN expr 					{ Assign($1, $3) }
   | expr PLUS expr						{ Binop($1, Add, $3) }
-	| expr MINUS	expr				{ Binop($1, Sub, $3) }
-	| expr TIMES	expr				{ Binop($1, Mult, $3) }
+	| expr MINUS	expr					{ Binop($1, Sub, $3) }
+	| expr TIMES	expr					{ Binop($1, Mult, $3) }
 	| expr DIVIDE expr					{ Binop($1, Div, $3) }
 	| expr PERCENT expr					{ Binop($1, Mod, $3) }
-	| NOT expr							{ Not($2) }
-	| MINUS expr						{ Neg($2) }
-	| expr OR expr						{ Binop($1, Or, $3) }
-	| expr AND expr						{ Binop($1, And, $3) }
-	| expr EQ expr						{ Binop($1, Eq, $3) }
-	| expr NEQ expr						{ Binop($1, Neq, $3) }
-	| expr LT expr						{ Binop($1, Lt, $3) }
-	| expr GT expr						{ Binop($1, Gt, $3) }
-	| expr LEQ expr						{ Binop($1, Leq, $3) }
-	| expr GEQ expr						{ Binop($1, Geq, $3) }
+	| expr AMPERSAND expr				{ Binop($1, Join, $3) }
+	| NOT expr									{ Not($2) }
+	| MINUS expr								{ Neg($2) }
+	| expr OR expr							{ Binop($1, Or, $3) }
+	| expr AND expr							{ Binop($1, And, $3) }
+	| expr EQ expr							{ Binop($1, Eq, $3) }
+	| expr NEQ expr							{ Binop($1, Neq, $3) }
+	| expr LT expr							{ Binop($1, Lt, $3) }
+	| expr GT expr							{ Binop($1, Gt, $3) }
+	| expr LEQ expr							{ Binop($1, Leq, $3) }
+	| expr GEQ expr							{ Binop($1, Geq, $3) }
 	| LPAREN expr RPAREN				{ $2 }
 	
 

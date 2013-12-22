@@ -22,17 +22,18 @@ rule token = parse
 | '{'       { LBRACE }          
 | '}'       { RBRACE }
 | ';'       { SEMI }
-| ':'		{ COLON }
-| ','		{ COMMA }
+| ':'				{ COLON }
+| ','				{ COMMA }
 | '['       { LBRACK }          
 | ']'       { RBRACK }
-| '=' 		{ ASSIGN }
+| '='				{ ASSIGN }
 | '+'       { PLUS }
 | '-'       { MINUS }
 | '*'       { TIMES }           
 | '/'       { DIVIDE }
-| '%'	    { PERCENT }	
+| '%'				{ PERCENT }	
 | '!'       { NOT }
+| '&'				{ AMPERSAND }
 | "||"	    { OR }
 | "&&"	    { AND }
 | "=="      { EQ }				
@@ -41,7 +42,7 @@ rule token = parse
 | '>'       { GT }
 | "<="      { LEQ }             
 | ">="      { GEQ }
-| '|'		{ PIPE }
+| '|'				{ PIPE }
 
 (*Types*)
 | "int[]"     { DATATYPE("intArr") }

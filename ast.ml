@@ -1,4 +1,4 @@
-type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | Neq | And | Or
+type op = Add | Sub | Mult | Div | Mod | Lt | Gt | Leq | Geq | Eq | Neq | And | Or | Join
 type typeConst = Integer | Double | Void | Pitch | Sound | Boolean
 
 type expr =
@@ -68,6 +68,7 @@ let rec string_of_expr = function
 			| Mult	-> "*"
 			| Div		-> "/"
 			| Mod		-> "%"
+			| Join	-> "&"
 			| Or		-> "||"
 			| And		-> "&&"
 			| Eq		-> "=="
