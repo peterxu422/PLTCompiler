@@ -25,6 +25,8 @@ end
 `rm printAst > /dev/null 2>&1`
 `rm *.cmo > /dev/null 2>&1`
 `rm *.cmi > /dev/null 2>&1`
+`rm scanner.ml > /dev/null 2>&1`
+`rm parser.ml > /dev/null 2>&1`
 `ocamllex scanner.mll #{supress_string}`
 `ocamlyacc parser.mly #{supress_string}`
 `ocamlc -i ast.ml > ast.mli`

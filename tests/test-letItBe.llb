@@ -1,0 +1,23 @@
+void main(){
+	sound cMajor;
+	sound gMajor;
+	sound aMinor;
+	sound fMajor;
+	sound eMinor;
+	sound dMajor;
+
+	sound[] progression;
+
+	cMajor = |C5, G5, E6, C6|:.5:100;
+	gMajor = |G4, D5, B5, G6|:.5:100;
+	aMinor = |A5, E6, C6, A6|:.5:100;
+	fMajor = |F4, C5, A6, F6|:.5:100;
+	eMinor = |E4, B5, G5, E5|:.25:100;
+	dMajor = |D4, A5, F5, D5|:.25:100;
+
+	progression = [cMajor, cMajor, gMajor, gMajor, aMinor, aMinor, fMajor, fMajor,
+									cMajor, cMajor, gMajor, gMajor, fMajor, eMinor, dMajor, cMajor, cMajor]*8;
+	mixDown(progression, 1);
+
+	
+}

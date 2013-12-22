@@ -21,3 +21,5 @@ clean:
 	rm -rf interpret
 	rm -rf bytecode
 	rm -rf *.mid
+	rm -rf scanner.ml
+	rm -rf parser.ml
